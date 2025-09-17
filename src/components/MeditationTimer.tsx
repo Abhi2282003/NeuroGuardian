@@ -17,10 +17,30 @@ const presetTimes = [
 ];
 
 const ambientSounds = [
-  { id: 'none', label: 'Silence', description: 'Pure quiet meditation' },
-  { id: 'nature', label: 'Forest', description: 'Birds and gentle wind' },
-  { id: 'ocean', label: 'Ocean Waves', description: 'Rhythmic wave sounds' },
-  { id: 'rain', label: 'Rain', description: 'Gentle rainfall' }
+  { 
+    id: 'none', 
+    label: 'Silence', 
+    description: 'Pure quiet meditation',
+    audioUrl: null
+  },
+  { 
+    id: 'nature', 
+    label: 'Forest', 
+    description: 'Birds and gentle wind',
+    audioUrl: 'https://www.soundjay.com/misc/sounds/forest-birds-2.mp3'
+  },
+  { 
+    id: 'ocean', 
+    label: 'Ocean Waves', 
+    description: 'Rhythmic wave sounds',
+    audioUrl: 'https://www.soundjay.com/nature/sounds/ocean-wave-1.mp3'
+  },
+  { 
+    id: 'rain', 
+    label: 'Rain', 
+    description: 'Gentle rainfall',
+    audioUrl: 'https://www.soundjay.com/nature/sounds/rain-1.mp3'
+  }
 ];
 
 export const MeditationTimer = ({ onBack }: MeditationTimerProps) => {
@@ -32,6 +52,40 @@ export const MeditationTimer = ({ onBack }: MeditationTimerProps) => {
   const [soundEnabled, setSoundEnabled] = useState(true);
   
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Handle ambient sound playback
+  useEffect(() => {
+    const selectedSoundData = ambientSounds.find(sound => sound.id === selectedSound);
+    
+    if (isActive && soundEnabled && selectedSoundData?.audioUrl) {
+      // Create and play ambient sound
+      audioRef.current = new Audio();
+      audioRef.current.src = selectedSoundData.audioUrl;
+      audioRef.current.loop = true;
+      audioRef.current.volume = 0.3;
+      
+      const playAudio = async () => {
+        try {
+          await audioRef.current?.play();
+        } catch (error) {
+          console.log('Audio autoplay prevented by browser:', error);
+        }
+      };
+      
+      playAudio();
+    } else if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
+
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, [isActive, selectedSound, soundEnabled]);
 
   useEffect(() => {
     if (isActive && timeLeft > 0) {
@@ -40,7 +94,17 @@ export const MeditationTimer = ({ onBack }: MeditationTimerProps) => {
           if (prev <= 1) {
             setIsActive(false);
             setIsCompleted(true);
-            // Play completion sound here if sound is enabled
+            // Stop ambient sound and play completion chime
+            if (audioRef.current) {
+              audioRef.current.pause();
+              audioRef.current = null;
+            }
+            if (soundEnabled) {
+              // Play completion sound (you could add a chime sound here)
+              const completionSound = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1eWz1fdY5rYGNjZGNkZGNkaGNkaGNjZGNjYGRkZGNjZGNkaGNkZGNjZGNjaGNkaGNjZGNjYGRkZGNjZGNkaGNkZGNjZGNjaGNkaGNjZGNjYGRkZGNjZGNkaGNkZGNjZGNjaGNkaGNjZGNjYGRkZGNjZGNkaGNkZGNjZGNjaGNkaGNjZGNjYGRkZGNjZGNk');
+              completionSound.volume = 0.5;
+              completionSound.play().catch(() => {});
+            }
             return 0;
           }
           return prev - 1;
@@ -57,7 +121,7 @@ export const MeditationTimer = ({ onBack }: MeditationTimerProps) => {
         clearInterval(intervalRef.current);
       }
     };
-  }, [isActive, timeLeft]);
+  }, [isActive, timeLeft, soundEnabled]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);

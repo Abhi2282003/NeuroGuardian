@@ -2,10 +2,13 @@ import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Brain, Waves, Heart, Sparkles, Clock, Play, Pause } from "lucide-react";
+import { Brain, Waves, Heart, Sparkles, Clock, Play, Pause, BarChart3 } from "lucide-react";
 import { BreathingExercise } from "@/components/BreathingExercise";
 import { MeditationTimer } from "@/components/MeditationTimer";
 import { TechniqueDetail } from "@/components/TechniqueDetail";
+import { ProgressiveMuscleRelaxation } from "@/components/ProgressiveMuscleRelaxation";
+import { GuidedImagery } from "@/components/GuidedImagery";
+import { Dashboard } from "@/components/Dashboard";
 
 const techniques = [
   {
@@ -29,6 +32,7 @@ const techniques = [
     category: "Relaxation",
     icon: Brain,
     color: "peaceful-lavender",
+    interactive: true,
     details: {
       what: "Mentally imagining a peaceful, safe place or pleasant scenario.",
       how: "Close eyes and vividly imagine sights, sounds, smells, and feelings of that scene (beach, forest, etc.).",
@@ -42,10 +46,24 @@ const techniques = [
     category: "Muscle Relaxation",
     icon: Heart,
     color: "healing-green",
+    interactive: true,
     details: {
       what: "Systematically tensing and relaxing muscle groups from head to toe.",
       how: "Tighten each muscle group for ~5–7 seconds, then relax for 20–30 seconds, noticing the difference.",
       benefits: "Lowers physical tension, decreases sympathetic nervous activity, and helps identify where you hold stress in your body."
+    }
+  },
+  {
+    id: "stretching",
+    title: "Stretching & Gentle Yoga",
+    description: "Slow stretching and beginner yoga poses",
+    category: "Muscle Relaxation",
+    icon: Heart,
+    color: "healing-green",
+    details: {
+      what: "Slow stretching or beginner yoga poses.",
+      how: "10–20 min daily session, focusing on breath + movement.",
+      benefits: "Releases muscle tension, improves blood flow, boosts serotonin, and promotes relaxation."
     }
   },
   {
@@ -61,18 +79,74 @@ const techniques = [
       how: "Sit quietly, observe breathing or bodily sensations, gently return attention when it wanders.",
       benefits: "Reduces rumination, stress, anxiety, and depression; increases grey matter in emotion-regulation areas of the brain."
     }
+  },
+  {
+    id: "loving-kindness",
+    title: "Loving-Kindness Meditation",
+    description: "Silently repeating phrases of goodwill toward yourself and others",
+    category: "Meditation",
+    icon: Sparkles,
+    color: "soft-mint",
+    details: {
+      what: "Silently repeating phrases of goodwill toward yourself and others.",
+      how: "Start with yourself, then extend to loved ones, neutral people, difficult people, and all beings.",
+      benefits: "Builds positive emotions, social connection, and self-compassion."
+    }
+  },
+  {
+    id: "cbt",
+    title: "Cognitive Behavioral Therapy",
+    description: "Recognize and change negative thought patterns",
+    category: "Psychotherapy",
+    icon: Brain,
+    color: "peaceful-lavender",
+    details: {
+      what: "Teaches you to recognize and change negative thought patterns and behaviors.",
+      how: "Work with a therapist to identify thought distortions and practice new coping strategies.",
+      benefits: "Reduces anxiety, depression, and stress by breaking the cycle of negative thinking."
+    }
+  },
+  {
+    id: "mbct",
+    title: "Mindfulness-Based Cognitive Therapy",
+    description: "Combines mindfulness meditation with CBT principles",
+    category: "Psychotherapy",
+    icon: Brain,
+    color: "peaceful-lavender",
+    details: {
+      what: "Combines mindfulness meditation with CBT principles.",
+      how: "Practice mindfulness techniques while learning to observe thoughts without judgment.",
+      benefits: "Improves emotional regulation, reduces relapse in depression, and builds present-moment awareness."
+    }
+  },
+  {
+    id: "dbt",
+    title: "Dialectical Behavior Therapy",
+    description: "Focus on emotional regulation and distress tolerance",
+    category: "Psychotherapy",
+    icon: Brain,
+    color: "peaceful-lavender",
+    details: {
+      what: "CBT-based therapy focusing on emotional regulation, distress tolerance, and interpersonal skills.",
+      how: "Learn specific skills for managing intense emotions and interpersonal relationships.",
+      benefits: "Especially helpful for intense emotions and self-harm urges."
+    }
   }
 ];
 
 const Index = () => {
   const [selectedTechnique, setSelectedTechnique] = useState<string | null>(null);
-  const [activeView, setActiveView] = useState<'home' | 'breathing' | 'meditation' | 'detail'>('home');
+  const [activeView, setActiveView] = useState<'home' | 'breathing' | 'meditation' | 'detail' | 'pmr' | 'imagery' | 'dashboard'>('home');
 
   const handleTechniqueClick = (technique: any) => {
     if (technique.id === 'breathing') {
       setActiveView('breathing');
     } else if (technique.id === 'mindfulness') {
       setActiveView('meditation');
+    } else if (technique.id === 'pmr') {
+      setActiveView('pmr');
+    } else if (technique.id === 'imagery') {
+      setActiveView('imagery');
     } else {
       setSelectedTechnique(technique.id);
       setActiveView('detail');
@@ -92,6 +166,18 @@ const Index = () => {
     return <MeditationTimer onBack={resetToHome} />;
   }
 
+  if (activeView === 'pmr') {
+    return <ProgressiveMuscleRelaxation onBack={resetToHome} />;
+  }
+
+  if (activeView === 'imagery') {
+    return <GuidedImagery onBack={resetToHome} />;
+  }
+
+  if (activeView === 'dashboard') {
+    return <Dashboard onBack={resetToHome} />;
+  }
+
   if (activeView === 'detail' && selectedTechnique) {
     const technique = techniques.find(t => t.id === selectedTechnique);
     return <TechniqueDetail technique={technique} onBack={resetToHome} />;
@@ -108,6 +194,16 @@ const Index = () => {
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             Evidence-based relaxation and mental health techniques to help you find peace and reduce stress
           </p>
+          <div className="mt-6">
+            <Button 
+              onClick={() => setActiveView('dashboard')} 
+              variant="outline" 
+              className="flex items-center gap-2"
+            >
+              <BarChart3 className="w-4 h-4" />
+              View Progress Dashboard
+            </Button>
+          </div>
         </div>
 
         {/* Categories */}
