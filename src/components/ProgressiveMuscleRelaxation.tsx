@@ -2,7 +2,10 @@ import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, Play, Pause, RotateCcw, SkipForward } from "lucide-react";
+import { ArrowLeft, Play, Pause, RotateCcw, SkipForward, Volume2, VolumeX } from "lucide-react";
+import { translations, Language } from "@/lib/translations";
+import { playTextToSpeech, stopCurrentAudio } from "@/lib/audio";
+import { LanguageSelector } from "./LanguageSelector";
 
 interface ProgressiveMuscleRelaxationProps {
   onBack: () => void;
@@ -10,9 +13,23 @@ interface ProgressiveMuscleRelaxationProps {
 
 const muscleGroups = [
   {
-    name: "Forehead and Scalp",
-    instruction: "Raise your eyebrows as high as possible and wrinkle your forehead. Hold the tension...",
-    relaxInstruction: "Now let your forehead smooth out completely. Feel the tension melting away...",
+    name: { en: "Forehead and Scalp", hi: "माथा और खोपड़ी", ta: "நெற்றி மற்றும் மயிர்க்கால்", te: "నుదురు మరియు తలపై చర్మం", kn: "ಹಣೆ ಮತ್ತು ತಲೆಬುರುಡೆ", bn: "কপাল এবং মাথার তালু" },
+    instruction: {
+      en: "Raise your eyebrows as high as possible and wrinkle your forehead. Feel the tension building in your forehead muscles. Hold this tension for 7 seconds.",
+      hi: "अपनी भौहों को यथासंभव ऊंचा उठाएं और अपने माथे को सिकोड़ें। अपने माथे की मांसपेशियों में तनाव महसूस करें। इस तनाव को 7 सेकंड तक बनाए रखें।",
+      ta: "உங்கள் புருவங்களை முடிந்தவரை உயர்த்தி உங்கள் நெற்றியை சுருக்குங்கள். உங்கள் நெற்றி தசைகளில் பதற்றத்தை உணருங்கள். இந்த பதற்றத்தை 7 வினாடிகள் பிடித்துக் கொள்ளுங்கள்।",
+      te: "మీ కనుబొమ్మలను వీలైనంత ఎత్తుగా లేపి మీ నుదుటిని ముడుచుకోండి. మీ నుదురు కండరాలలో ఒత్తిడిని అనుభవించండి. ఈ ఒత్తిడిని 7 సెకన్లపాటు పట్టుకోండి।",
+      kn: "ನಿಮ್ಮ ಹುಬ್ಬುಗಳನ್ನು ಸಾಧ್ಯವಾದಷ್ಟು ಎತ್ತಿ ನಿಮ್ಮ ಹಣೆಯನ್ನು ಸುಕ್ಕುಗಟ್ಟಿಸಿ. ನಿಮ್ಮ ಹಣೆಯ ಸ್ನಾಯುಗಳಲ್ಲಿ ಒತ್ತಡವನ್ನು ಅನುಭವಿಸಿ. ಈ ಒತ್ತಡವನ್ನು 7 ಸೆಕೆಂಡುಗಳ ಕಾಲ ಹಿಡಿದುಕೊಳ್ಳಿ।",
+      bn: "আপনার ভ্রু যতটা সম্ভব উপরে তুলুন এবং আপনার কপাল কুঞ্চিত করুন। আপনার কপালের পেশীতে টেনশন অনুভব করুন। এই টেনশন 7 সেকেন্ড ধরে রাখুন।"
+    },
+    relaxInstruction: {
+      en: "Now let your forehead smooth out completely. Feel the tension melting away like warm water flowing down. Notice the difference between tension and relaxation.",
+      hi: "अब अपने माथे को पूरी तरह से चिकना होने दें। तनाव को गर्म पानी के नीचे बहने की तरह पिघलते हुए महसूस करें। तनाव और आराम के बीच अंतर को नोटिस करें।",
+      ta: "இப்போது உங்கள் நெற்றியை முழுவதுமாக மென்மையாக விடுங்கள். பதற்றம் சூடான நீர் போல கீழே ஓடுவதை உணருங்கள். பதற்றத்திற்கும் ஓய்விற்கும் இடையிலான வித்தியாசத்தை கவனியுங்கள்।",
+      te: "ఇప్పుడు మీ నుదుటిని పూర్తిగా మృదువుగా చేయనివ్వండి. ఒత్తిడి వేడిమైన నీరు కింద ప్రవహిస్తున్నట్లు కరుగుతున్నట్లు అనుభవించండి. ఒత్తిడి మరియు విశ్రాంతి మధ్య వ్యత్యాసాన్ని గమనించండి।",
+      kn: "ಈಗ ನಿಮ್ಮ ಹಣೆಯನ್ನು ಸಂಪೂರ್ಣವಾಗಿ ನಯವಾಗಿಸಲು ಬಿಡಿ. ಒತ್ತಡವು ಬೆಚ್ಚಗಿನ ನೀರು ಕೆಳಗೆ ಹರಿಯುವಂತೆ ಕರಗುತ್ತಿರುವಂತೆ ಅನುಭವಿಸಿ. ಒತ್ತಡ ಮತ್ತು ವಿಶ್ರಾಂತಿಯ ನಡುವಿನ ವ್ಯತ್ಯಾಸವನ್ನು ಗಮನಿಸಿ।",
+      bn: "এখন আপনার কপাল সম্পূর্ণভাবে মসৃণ হতে দিন। টেনশন গরম পানির মতো নিচে গড়িয়ে পড়ার মতো গলে যেতে অনুভব করুন। টেনশন এবং শিথিলায়নের মধ্যে পার্থক্য লক্ষ্য করুন।"
+    },
     duration: 7000,
     relaxDuration: 20000
   },
@@ -82,15 +99,20 @@ const muscleGroups = [
 ];
 
 export const ProgressiveMuscleRelaxation = ({ onBack }: ProgressiveMuscleRelaxationProps) => {
+  const [language, setLanguage] = useState<Language>('en');
   const [isActive, setIsActive] = useState(false);
   const [currentGroupIndex, setCurrentGroupIndex] = useState(0);
   const [isRelaxPhase, setIsRelaxPhase] = useState(false);
   const [timeLeft, setTimeLeft] = useState(muscleGroups[0].duration);
   const [completedGroups, setCompletedGroups] = useState(0);
   const [isCompleted, setIsCompleted] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(true);
   
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const phaseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const t = translations[language];
+  const currentGroup = muscleGroups[currentGroupIndex];
 
   useEffect(() => {
     if (isActive && !isCompleted) {
@@ -163,8 +185,17 @@ export const ProgressiveMuscleRelaxation = ({ onBack }: ProgressiveMuscleRelaxat
     return Math.ceil(milliseconds / 1000);
   };
 
+  // Play audio instructions
+  useEffect(() => {
+    if (isActive && !isCompleted && soundEnabled) {
+      const instruction = isRelaxPhase 
+        ? currentGroup.relaxInstruction[language]
+        : currentGroup.instruction[language];
+      playTextToSpeech(instruction);
+    }
+  }, [currentGroupIndex, isRelaxPhase, isActive, soundEnabled, language]);
+
   const progress = ((completedGroups + (isRelaxPhase ? 0.5 : 0)) / muscleGroups.length) * 100;
-  const currentGroup = muscleGroups[currentGroupIndex];
 
   return (
     <div className="min-h-screen bg-gradient-background flex items-center justify-center p-4">
@@ -174,23 +205,33 @@ export const ProgressiveMuscleRelaxation = ({ onBack }: ProgressiveMuscleRelaxat
             <div className="flex items-center justify-between mb-4">
               <Button variant="ghost" onClick={onBack} className="flex items-center gap-2">
                 <ArrowLeft className="w-4 h-4" />
-                Back
+                {t.back}
               </Button>
-              <div className="text-sm text-muted-foreground">
-                Progress: {completedGroups}/{muscleGroups.length} groups
+              <div className="flex items-center gap-2">
+                <LanguageSelector language={language} onLanguageChange={setLanguage} />
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => setSoundEnabled(!soundEnabled)}
+                >
+                  {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+                </Button>
               </div>
             </div>
-            <CardTitle className="text-3xl mb-2">Progressive Muscle Relaxation</CardTitle>
+            <div className="text-sm text-muted-foreground text-center mb-4">
+              {t.progress}: {completedGroups}/{muscleGroups.length} {t.groups}
+            </div>
+            <CardTitle className="text-3xl mb-2">{t.pmr}</CardTitle>
             <p className="text-muted-foreground">
-              Systematically tense and relax each muscle group to release physical tension
+              {t.pmrDesc}
             </p>
           </CardHeader>
           
           <CardContent className="space-y-8">
             {/* Progress Bar */}
             <div className="space-y-2">
-              <div className="flex justify-between text-sm text-muted-foreground">
-                <span>Overall Progress</span>
+                <div className="flex justify-between text-sm text-muted-foreground">
+                <span>{t.progress}</span>
                 <span>{Math.round(progress)}%</span>
               </div>
               <Progress value={progress} className="h-2" />
@@ -219,7 +260,7 @@ export const ProgressiveMuscleRelaxation = ({ onBack }: ProgressiveMuscleRelaxat
                   
                   <div className="space-y-3">
                     <h3 className="text-2xl font-semibold text-primary">
-                      {currentGroup.name}
+                      {currentGroup.name[language]}
                     </h3>
                     <div className={`text-lg p-4 rounded-lg ${
                       isRelaxPhase 
@@ -227,10 +268,10 @@ export const ProgressiveMuscleRelaxation = ({ onBack }: ProgressiveMuscleRelaxat
                         : 'bg-calm-blue/10 border border-calm-blue/20'
                     }`}>
                       <p className="font-medium mb-2">
-                        {isRelaxPhase ? 'RELAX' : 'TENSE'}
+                        {isRelaxPhase ? t.relax : t.tense}
                       </p>
                       <p className="leading-relaxed">
-                        {isRelaxPhase ? currentGroup.relaxInstruction : currentGroup.instruction}
+                        {isRelaxPhase ? currentGroup.relaxInstruction[language] : currentGroup.instruction[language]}
                       </p>
                     </div>
                   </div>
@@ -248,9 +289,9 @@ export const ProgressiveMuscleRelaxation = ({ onBack }: ProgressiveMuscleRelaxat
             {/* Completion Message */}
             {isCompleted && (
               <div className="text-center p-8 bg-gradient-primary rounded-lg text-white">
-                <h3 className="text-2xl font-bold mb-4">Excellent Work! 🎉</h3>
+                <h3 className="text-2xl font-bold mb-4">{t.wellDone}</h3>
                 <p className="text-lg mb-4">
-                  You've completed a full Progressive Muscle Relaxation session.
+                  You've completed a full {t.pmr} session.
                 </p>
                 <p className="opacity-90">
                   Take a moment to notice how your body feels now compared to when you started.
@@ -268,17 +309,17 @@ export const ProgressiveMuscleRelaxation = ({ onBack }: ProgressiveMuscleRelaxat
                 {isCompleted ? (
                   <>
                     <RotateCcw className="w-5 h-5 mr-2" />
-                    Start New Session
+                    {t.start} New Session
                   </>
                 ) : isActive ? (
                   <>
                     <Pause className="w-5 h-5 mr-2" />
-                    Pause
+                    {t.pause}
                   </>
                 ) : (
                   <>
                     <Play className="w-5 h-5 mr-2" />
-                    {currentGroupIndex === 0 && !isRelaxPhase ? 'Begin PMR' : 'Resume'}
+                    {currentGroupIndex === 0 && !isRelaxPhase ? `${t.start} PMR` : t.resume}
                   </>
                 )}
               </Button>
@@ -302,7 +343,7 @@ export const ProgressiveMuscleRelaxation = ({ onBack }: ProgressiveMuscleRelaxat
                   size="lg"
                 >
                   <RotateCcw className="w-5 h-5 mr-2" />
-                  Reset
+                  {t.reset}
                 </Button>
               )}
             </div>
@@ -310,7 +351,7 @@ export const ProgressiveMuscleRelaxation = ({ onBack }: ProgressiveMuscleRelaxat
             {/* Instructions */}
             {!isActive && !isCompleted && currentGroupIndex === 0 && (
               <div className="text-center p-6 bg-gradient-secondary rounded-lg">
-                <h4 className="font-semibold text-accent-foreground mb-2">Before You Begin</h4>
+                <h4 className="font-semibold text-accent-foreground mb-2">{t.gettingStarted}</h4>
                 <div className="text-accent-foreground/80 text-sm space-y-2">
                   <p>• Find a comfortable position in a quiet space</p>
                   <p>• Tense each muscle group for 5-7 seconds</p>

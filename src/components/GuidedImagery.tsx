@@ -3,6 +3,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Play, Pause, RotateCcw, Volume2, VolumeX } from "lucide-react";
+import { translations, Language } from "@/lib/translations";
+import { playTextToSpeech, stopCurrentAudio } from "@/lib/audio";
+import { LanguageSelector } from "./LanguageSelector";
 
 interface GuidedImageryProps {
   onBack: () => void;
@@ -92,6 +95,7 @@ const imageryScenarios = [
 ];
 
 export const GuidedImagery = ({ onBack }: GuidedImageryProps) => {
+  const [language, setLanguage] = useState<Language>('en');
   const [selectedScenario, setSelectedScenario] = useState(imageryScenarios[0]);
   const [isActive, setIsActive] = useState(false);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
@@ -101,6 +105,9 @@ export const GuidedImagery = ({ onBack }: GuidedImageryProps) => {
   
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const stepTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const t = translations[language];
+  const currentStep = selectedScenario.script[currentStepIndex];
 
   useEffect(() => {
     if (isActive && !isCompleted) {
@@ -165,8 +172,14 @@ export const GuidedImagery = ({ onBack }: GuidedImageryProps) => {
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
+  // Play audio narration
+  useEffect(() => {
+    if (isActive && currentStep && soundEnabled) {
+      playTextToSpeech(currentStep.text);
+    }
+  }, [currentStepIndex, isActive, soundEnabled]);
+
   const progress = selectedScenario.script.length > 0 ? ((currentStepIndex + 1) / selectedScenario.script.length) * 100 : 0;
-  const currentStep = selectedScenario.script[currentStepIndex];
 
   return (
     <div className="min-h-screen bg-gradient-background flex items-center justify-center p-4">
@@ -176,9 +189,10 @@ export const GuidedImagery = ({ onBack }: GuidedImageryProps) => {
             <div className="flex items-center justify-between mb-4">
               <Button variant="ghost" onClick={onBack} className="flex items-center gap-2">
                 <ArrowLeft className="w-4 h-4" />
-                Back
+                {t.back}
               </Button>
               <div className="flex items-center gap-2">
+                <LanguageSelector language={language} onLanguageChange={setLanguage} />
                 <Button 
                   variant="ghost" 
                   size="sm"
@@ -188,9 +202,9 @@ export const GuidedImagery = ({ onBack }: GuidedImageryProps) => {
                 </Button>
               </div>
             </div>
-            <CardTitle className="text-3xl mb-2">Guided Imagery</CardTitle>
+            <CardTitle className="text-3xl mb-2">{t.guidedImagery}</CardTitle>
             <p className="text-muted-foreground">
-              Immerse yourself in peaceful, healing visualizations
+              {t.guidedImageryDesc}
             </p>
           </CardHeader>
           
@@ -198,7 +212,7 @@ export const GuidedImagery = ({ onBack }: GuidedImageryProps) => {
             {/* Scenario Selection */}
             {!isActive && !isCompleted && (
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-center">Choose Your Peaceful Place</h3>
+                <h3 className="text-lg font-semibold text-center">{t.choosePlace}</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {imageryScenarios.map((scenario) => (
                     <Card 
@@ -281,7 +295,7 @@ export const GuidedImagery = ({ onBack }: GuidedImageryProps) => {
             {/* Completion Message */}
             {isCompleted && (
               <div className="text-center p-8 bg-gradient-primary rounded-lg text-white">
-                <h3 className="text-2xl font-bold mb-4">Beautiful Journey Complete 🌟</h3>
+                <h3 className="text-2xl font-bold mb-4">{t.journeyComplete}</h3>
                 <p className="text-lg mb-4">
                   You've experienced a full guided imagery session in your {selectedScenario.title.toLowerCase()}.
                 </p>
@@ -301,17 +315,17 @@ export const GuidedImagery = ({ onBack }: GuidedImageryProps) => {
                 {isCompleted ? (
                   <>
                     <RotateCcw className="w-5 h-5 mr-2" />
-                    Start New Journey
+                    {t.start} New Journey
                   </>
                 ) : isActive ? (
                   <>
                     <Pause className="w-5 h-5 mr-2" />
-                    Pause
+                    {t.pause}
                   </>
                 ) : (
                   <>
                     <Play className="w-5 h-5 mr-2" />
-                    Begin Journey
+                    {t.beginJourney}
                   </>
                 )}
               </Button>
@@ -323,7 +337,7 @@ export const GuidedImagery = ({ onBack }: GuidedImageryProps) => {
                   size="lg"
                 >
                   <RotateCcw className="w-5 h-5 mr-2" />
-                  Reset
+                  {t.reset}
                 </Button>
               )}
             </div>
@@ -331,7 +345,7 @@ export const GuidedImagery = ({ onBack }: GuidedImageryProps) => {
             {/* Instructions */}
             {!isActive && !isCompleted && (
               <div className="text-center p-6 bg-gradient-secondary rounded-lg">
-                <h4 className="font-semibold text-accent-foreground mb-2">Prepare for Your Journey</h4>
+                <h4 className="font-semibold text-accent-foreground mb-2">{t.gettingStarted}</h4>
                 <div className="text-accent-foreground/80 text-sm space-y-2">
                   <p>• Find a quiet, comfortable place where you won't be disturbed</p>
                   <p>• Sit or lie down in a relaxed position</p>

@@ -1,8 +1,10 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Play, Pause, RotateCcw, Volume2, VolumeX, Globe } from "lucide-react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ArrowLeft, Play, Pause, RotateCcw, Volume2, VolumeX } from "lucide-react";
+import { translations, Language } from "@/lib/translations";
+import { playAmbientSound, stopCurrentAudio, initializeAudio } from "@/lib/audio";
+import { LanguageSelector } from "./LanguageSelector";
 
 interface MeditationTimerProps {
   onBack: () => void;
@@ -75,116 +77,6 @@ const generateForestSounds = (audioContext: AudioContext, duration: number = 1) 
   return buffer;
 };
 
-const translations = {
-  en: {
-    title: 'Mindfulness Meditation',
-    description: 'Set your timer and find your center through mindful awareness',
-    back: 'Back',
-    chooseDuration: 'Choose Duration',
-    ambientSound: 'Ambient Sound',
-    silence: 'Silence',
-    silenceDesc: 'Pure quiet meditation',
-    forest: 'Forest',
-    forestDesc: 'Birds and gentle wind',
-    ocean: 'Ocean Waves',
-    oceanDesc: 'Rhythmic wave sounds',
-    rain: 'Rain',
-    rainDesc: 'Gentle rainfall',
-    ready: 'Ready to begin',
-    meditating: 'Meditating...',
-    complete: 'Complete!',
-    beginMeditation: 'Begin Meditation',
-    pause: 'Pause',
-    startNew: 'Start New Session',
-    reset: 'Reset',
-    gettingStarted: 'Getting Started',
-    gettingStartedText: 'Find a comfortable position, close your eyes, and focus on your breath. When thoughts arise, gently return attention to your breathing.',
-    focusText: 'Focus on your breath... let thoughts come and go without judgment',
-    wellDone: 'Well Done! 🎉',
-    completionText: 'You\'ve completed {time} minutes of mindfulness meditation. Take a moment to notice how you feel.'
-  },
-  es: {
-    title: 'Meditación Mindfulness',
-    description: 'Configura tu temporizador y encuentra tu centro a través de la conciencia plena',
-    back: 'Atrás',
-    chooseDuration: 'Elegir Duración',
-    ambientSound: 'Sonido Ambiental',
-    silence: 'Silencio',
-    silenceDesc: 'Meditación en silencio puro',
-    forest: 'Bosque',
-    forestDesc: 'Pájaros y viento suave',
-    ocean: 'Olas del Océano',
-    oceanDesc: 'Sonidos rítmicos de olas',
-    rain: 'Lluvia',
-    rainDesc: 'Lluvia suave',
-    ready: 'Listo para comenzar',
-    meditating: 'Meditando...',
-    complete: '¡Completado!',
-    beginMeditation: 'Comenzar Meditación',
-    pause: 'Pausar',
-    startNew: 'Iniciar Nueva Sesión',
-    reset: 'Reiniciar',
-    gettingStarted: 'Comenzando',
-    gettingStartedText: 'Encuentra una posición cómoda, cierra los ojos y concéntrate en tu respiración. Cuando surjan pensamientos, regresa suavemente la atención a tu respiración.',
-    focusText: 'Concéntrate en tu respiración... deja que los pensamientos vengan y vayan sin juzgar',
-    wellDone: '¡Bien Hecho! 🎉',
-    completionText: 'Has completado {time} minutos de meditación mindfulness. Tómate un momento para notar cómo te sientes.'
-  },
-  fr: {
-    title: 'Méditation Pleine Conscience',
-    description: 'Réglez votre minuteur et trouvez votre centre grâce à la conscience attentive',
-    back: 'Retour',
-    chooseDuration: 'Choisir la Durée',
-    ambientSound: 'Son Ambiant',
-    silence: 'Silence',
-    silenceDesc: 'Méditation en silence pur',
-    forest: 'Forêt',
-    forestDesc: 'Oiseaux et vent doux',
-    ocean: 'Vagues de l\'Océan',
-    oceanDesc: 'Sons rythmiques de vagues',
-    rain: 'Pluie',
-    rainDesc: 'Pluie douce',
-    ready: 'Prêt à commencer',
-    meditating: 'En méditation...',
-    complete: 'Terminé!',
-    beginMeditation: 'Commencer la Méditation',
-    pause: 'Pause',
-    startNew: 'Nouvelle Session',
-    reset: 'Réinitialiser',
-    gettingStarted: 'Pour Commencer',
-    gettingStartedText: 'Trouvez une position confortable, fermez les yeux et concentrez-vous sur votre respiration. Quand des pensées surgissent, ramenez doucement l\'attention sur votre respiration.',
-    focusText: 'Concentrez-vous sur votre respiration... laissez les pensées aller et venir sans jugement',
-    wellDone: 'Bien Joué! 🎉',
-    completionText: 'Vous avez terminé {time} minutes de méditation pleine conscience. Prenez un moment pour remarquer comment vous vous sentez.'
-  },
-  de: {
-    title: 'Achtsamkeits-Meditation',
-    description: 'Stellen Sie Ihren Timer ein und finden Sie Ihr Zentrum durch achtsame Wahrnehmung',
-    back: 'Zurück',
-    chooseDuration: 'Dauer Wählen',
-    ambientSound: 'Umgebungsklang',
-    silence: 'Stille',
-    silenceDesc: 'Reine stille Meditation',
-    forest: 'Wald',
-    forestDesc: 'Vögel und sanfter Wind',
-    ocean: 'Meereswellen',
-    oceanDesc: 'Rhythmische Wellenklänge',
-    rain: 'Regen',
-    rainDesc: 'Sanfter Regenfall',
-    ready: 'Bereit zu beginnen',
-    meditating: 'Meditiere...',
-    complete: 'Abgeschlossen!',
-    beginMeditation: 'Meditation Beginnen',
-    pause: 'Pause',
-    startNew: 'Neue Sitzung Starten',
-    reset: 'Zurücksetzen',
-    gettingStarted: 'Erste Schritte',
-    gettingStartedText: 'Finden Sie eine bequeme Position, schließen Sie die Augen und konzentrieren Sie sich auf Ihren Atem. Wenn Gedanken aufkommen, lenken Sie die Aufmerksamkeit sanft zurück zu Ihrem Atem.',
-    focusText: 'Konzentrieren Sie sich auf Ihren Atem... lassen Sie Gedanken kommen und gehen ohne zu urteilen',
-    wellDone: 'Gut Gemacht! 🎉',
-    completionText: 'Sie haben {time} Minuten Achtsamkeits-Meditation abgeschlossen. Nehmen Sie sich einen Moment, um zu bemerken, wie Sie sich fühlen.'
-  }
-};
 
 const ambientSounds = [
   { 
@@ -220,7 +112,7 @@ export const MeditationTimer = ({ onBack }: MeditationTimerProps) => {
   const [isCompleted, setIsCompleted] = useState(false);
   const [selectedSound, setSelectedSound] = useState('none');
   const [soundEnabled, setSoundEnabled] = useState(true);
-  const [language, setLanguage] = useState<keyof typeof translations>('en');
+  const [language, setLanguage] = useState<Language>('en');
   
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -231,70 +123,20 @@ export const MeditationTimer = ({ onBack }: MeditationTimerProps) => {
 
   // Initialize Web Audio API
   useEffect(() => {
-    if (!audioContextRef.current) {
-      audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
-      gainNodeRef.current = audioContextRef.current.createGain();
-      gainNodeRef.current.connect(audioContextRef.current.destination);
-      gainNodeRef.current.gain.value = 0.3;
-    }
+    initializeAudio();
   }, []);
 
-  // Handle ambient sound playback with Web Audio API
+  // Handle ambient sound playback
   useEffect(() => {
-    const playGeneratedSound = async () => {
-      if (!audioContextRef.current || !gainNodeRef.current) return;
-
-      // Stop previous sound
-      if (sourceNodeRef.current) {
-        try {
-          sourceNodeRef.current.stop();
-        } catch (e) {}
-        sourceNodeRef.current = null;
-      }
-
-      const selectedSoundData = ambientSounds.find(sound => sound.id === selectedSound);
-      
-      if (isActive && soundEnabled && selectedSoundData?.generator) {
-        try {
-          // Resume audio context if suspended
-          if (audioContextRef.current.state === 'suspended') {
-            await audioContextRef.current.resume();
-          }
-
-          const playLoop = () => {
-            if (!audioContextRef.current || !gainNodeRef.current || !isActive) return;
-            
-            const buffer = selectedSoundData.generator!(audioContextRef.current, 4); // 4 second loops
-            sourceNodeRef.current = audioContextRef.current.createBufferSource();
-            sourceNodeRef.current.buffer = buffer;
-            sourceNodeRef.current.connect(gainNodeRef.current);
-            sourceNodeRef.current.loop = false;
-            
-            sourceNodeRef.current.onended = () => {
-              if (isActive && soundEnabled) {
-                setTimeout(playLoop, 100); // Small gap between loops
-              }
-            };
-            
-            sourceNodeRef.current.start();
-          };
-
-          playLoop();
-        } catch (error) {
-          console.log('Audio playback error:', error);
-        }
-      }
-    };
-
-    playGeneratedSound();
+    if (isActive && soundEnabled && selectedSound !== 'none') {
+      const soundType = selectedSound as 'forest' | 'ocean' | 'rain';
+      playAmbientSound(soundType);
+    } else {
+      stopCurrentAudio();
+    }
 
     return () => {
-      if (sourceNodeRef.current) {
-        try {
-          sourceNodeRef.current.stop();
-        } catch (e) {}
-        sourceNodeRef.current = null;
-      }
+      stopCurrentAudio();
     };
   }, [isActive, selectedSound, soundEnabled]);
 
@@ -384,17 +226,7 @@ export const MeditationTimer = ({ onBack }: MeditationTimerProps) => {
                 {t.back}
               </Button>
               <div className="flex items-center gap-2">
-                <Select value={language} onValueChange={(value: keyof typeof translations) => setLanguage(value)}>
-                  <SelectTrigger className="w-20">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="en">🇺🇸 EN</SelectItem>
-                    <SelectItem value="es">🇪🇸 ES</SelectItem>
-                    <SelectItem value="fr">🇫🇷 FR</SelectItem>
-                    <SelectItem value="de">🇩🇪 DE</SelectItem>
-                  </SelectContent>
-                </Select>
+                <LanguageSelector language={language} onLanguageChange={setLanguage} />
                 <Button 
                   variant="ghost" 
                   size="sm"
