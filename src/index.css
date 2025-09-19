@@ -8,51 +8,52 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 210 20% 98%;
-    --foreground: 215 25% 27%;
+    /* Dark theme colors matching the reference */
+    --background: 220 20% 8%;
+    --foreground: 210 40% 95%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 215 25% 27%;
+    --card: 220 15% 12%;
+    --card-foreground: 210 40% 95%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 215 25% 27%;
+    --popover: 220 15% 12%;
+    --popover-foreground: 210 40% 95%;
 
-    --primary: 195 85% 41%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 142 76% 48%;
+    --primary-foreground: 220 20% 8%;
 
-    --secondary: 175 55% 85%;
-    --secondary-foreground: 195 85% 25%;
+    --secondary: 220 15% 18%;
+    --secondary-foreground: 210 40% 95%;
 
-    --muted: 195 15% 95%;
-    --muted-foreground: 215 16% 47%;
+    --muted: 220 15% 15%;
+    --muted-foreground: 215 20% 60%;
 
-    --accent: 265 55% 88%;
-    --accent-foreground: 265 85% 35%;
+    --accent: 142 50% 35%;
+    --accent-foreground: 210 40% 95%;
 
-    --success: 142 85% 45%;
-    --success-foreground: 0 0% 100%;
+    --success: 142 76% 48%;
+    --success-foreground: 220 20% 8%;
 
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 0 75% 55%;
+    --destructive-foreground: 210 40% 95%;
 
-    --border: 195 20% 90%;
-    --input: 195 20% 90%;
-    --ring: 195 85% 41%;
+    --border: 220 15% 18%;
+    --input: 220 15% 18%;
+    --ring: 142 76% 48%;
 
-    /* Wellness specific colors */
-    --calm-blue: 195 85% 41%;
-    --healing-green: 142 85% 45%;
-    --peaceful-lavender: 265 55% 70%;
-    --soft-mint: 175 55% 85%;
+    /* Wellness specific colors with dark theme */
+    --calm-blue: 195 85% 60%;
+    --healing-green: 142 76% 48%;
+    --peaceful-lavender: 265 55% 65%;
+    --soft-mint: 175 45% 65%;
     
-    /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(var(--calm-blue)), hsl(var(--healing-green)));
-    --gradient-secondary: linear-gradient(135deg, hsl(var(--soft-mint)), hsl(var(--peaceful-lavender)));
+    /* Gradients for dark theme */
+    --gradient-primary: linear-gradient(135deg, hsl(var(--healing-green)), hsl(var(--primary)));
+    --gradient-secondary: linear-gradient(135deg, hsl(var(--secondary)), hsl(var(--accent)));
     --gradient-background: linear-gradient(180deg, hsl(var(--background)), hsl(var(--muted)));
     
-    /* Shadows */
-    --shadow-gentle: 0 4px 20px -4px hsl(var(--calm-blue) / 0.15);
-    --shadow-card: 0 8px 32px -8px hsl(var(--calm-blue) / 0.12);
+    /* Shadows for dark theme */
+    --shadow-gentle: 0 4px 20px -4px hsl(var(--healing-green) / 0.25);
+    --shadow-card: 0 8px 32px -8px hsl(var(--healing-green) / 0.15);
     
     /* Animations */
     --transition-smooth: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
@@ -77,41 +78,40 @@ All colors MUST be HSL.
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+  .light {
+    /* Light theme (original colors) */
+    --background: 210 20% 98%;
+    --foreground: 215 25% 27%;
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+    --card: 0 0% 100%;
+    --card-foreground: 215 25% 27%;
 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 215 25% 27%;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 195 85% 41%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 175 55% 85%;
+    --secondary-foreground: 195 85% 25%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 195 15% 95%;
+    --muted-foreground: 215 16% 47%;
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 265 55% 88%;
+    --accent-foreground: 265 85% 35%;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
+    --border: 195 20% 90%;
+    --input: 195 20% 90%;
+    --ring: 195 85% 41%;
+    
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 }
