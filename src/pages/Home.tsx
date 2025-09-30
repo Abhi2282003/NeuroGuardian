@@ -9,7 +9,7 @@ export default function Home() {
       icon: Brain,
       title: "EEG Monitoring",
       description: "Real-time brainwave analysis with BioAmp devices",
-      path: "/bioamp",
+      path: "/auth",
       color: "text-cyan-400"
     },
     {
@@ -21,22 +21,35 @@ export default function Home() {
     },
     {
       icon: Activity,
-      title: "Stress Analysis",
-      description: "AI-powered stress level predictions from EEG signals",
-      path: "/bioamp",
+      title: "Neurological Screening",
+      description: "Early detection assessments for cognitive health",
+      path: "/auth",
       color: "text-cyan-400"
     },
     {
       icon: Sparkles,
       title: "Personalized Insights",
-      description: "Track your progress and optimize your mental wellness",
-      path: "/wellness",
+      description: "Track your progress and optimize your wellness",
+      path: "/auth",
       color: "text-primary"
     }
   ];
 
   return (
     <div className="min-h-screen bg-gradient-background">
+      {/* Navigation */}
+      <nav className="border-b border-border/40 bg-card/30 backdrop-blur-sm sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            <Brain className="h-6 w-6 text-primary" />
+            <span className="font-bold text-xl">NeuroScreen</span>
+          </div>
+          <Link to="/auth">
+            <Button variant="outline">Sign In</Button>
+          </Link>
+        </div>
+      </nav>
+
       {/* Hero Section */}
       <div className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-cyan-500/10" />
@@ -53,14 +66,11 @@ export default function Home() {
                 Monitor Your Mind,
               </span>
               <br />
-              <span className="text-foreground">
-                Master Your Wellness
-              </span>
+              <span className="text-foreground">Master Your Wellness</span>
             </h1>
             
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Combine cutting-edge EEG technology with proven mindfulness techniques 
-              to understand and improve your mental state
+              AI-powered neurological screening, real-time EEG monitoring, and evidence-based mindfulness practices
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -74,7 +84,7 @@ export default function Home() {
               <Link to="/wellness">
                 <Button size="lg" variant="outline" className="text-lg px-8">
                   <Heart className="mr-2 h-5 w-5" />
-                  Explore Wellness
+                  Try Wellness Tools
                 </Button>
               </Link>
             </div>
@@ -108,48 +118,13 @@ export default function Home() {
         </div>
       </div>
 
-      {/* About Section */}
-      <div className="max-w-7xl mx-auto px-4 py-20 sm:px-6 lg:px-8">
-        <Card className="shadow-card">
-          <CardHeader>
-            <CardTitle className="text-3xl text-center">About Neuro-Sentinel</CardTitle>
-            <CardDescription className="text-center text-lg">
-              Your personal mental wellness companion
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <p className="text-muted-foreground text-center max-w-3xl mx-auto">
-              Neuro-Sentinel combines advanced biosignal processing with evidence-based wellness practices. 
-              Monitor your brainwaves in real-time using BioAmp/Chords devices, while accessing a comprehensive 
-              suite of mindfulness tools including meditation, breathing exercises, progressive muscle relaxation, 
-              and guided imagery.
-            </p>
-            
-            <div className="grid md:grid-cols-3 gap-6 pt-8">
-              <div className="text-center space-y-2">
-                <div className="text-4xl font-bold text-primary">500Hz</div>
-                <div className="text-sm text-muted-foreground">Sample Rate</div>
-              </div>
-              <div className="text-center space-y-2">
-                <div className="text-4xl font-bold text-primary">6 Ch</div>
-                <div className="text-sm text-muted-foreground">EEG Channels</div>
-              </div>
-              <div className="text-center space-y-2">
-                <div className="text-4xl font-bold text-primary">Real-time</div>
-                <div className="text-sm text-muted-foreground">Analysis</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
       {/* Footer */}
       <footer className="border-t border-border/40 mt-20">
         <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-          <p className="text-center text-sm text-muted-foreground">
-            This platform is inspired by Chords-Web and designed to work with Upside Down Labs BioAmp/Chords devices.
+          <p className="text-sm text-muted-foreground text-center">
+            ⚠️ This is a preliminary screening tool, not a diagnosis. Seek professional medical advice.
             <br />
-            Firmware © 2024–2025 Upside Down Labs (GPLv3). This web app is client-side only and intended for demo/education.
+            <span className="text-xs">Platform inspired by Chords-Web. Works with Upside Down Labs BioAmp/Chords devices.</span>
           </p>
         </div>
       </footer>
