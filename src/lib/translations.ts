@@ -292,7 +292,7 @@ export const translations = {
     hands: 'అరచేతులు',
     chest: 'ఛాతీ',
     abdomen: 'పొత్తికడుపు',
-    back: 'వీపు',
+    backPart: 'వీపు',
     buttocks: 'నితంబాలు',
     thighs: 'తొడలు',
     calves: 'కాళ్ళు',
@@ -302,7 +302,20 @@ export const translations = {
     chestAbdomen: 'ఛాతీ మరియు పొత్తికడుపు',
     backButtocks: 'వీపు మరియు నితంబాలు',
     thighsCalves: 'తొడలు మరియు కాళ్ళు',
-    calvesFeet: 'కాళ్ళు మరియు పాదాలు'
+    calvesFeet: 'కాళ్ళు మరియు పాదాలు',
+    
+    // PMR specific
+    pmr: 'ప్రగతిశీల కండరాల సడలింపు',
+    pmrDesc: 'క్రమబద్ధమైన కండరాల సడలింపు ద్వారా ఒత్తిడిని విడుదల చేయండి',
+    groups: 'సమూహాలు',
+    relax: 'విశ్రాంతి తీసుకోండి',
+    tense: 'ఒత్తిడి',
+    
+    // Yoga specific
+    enhancedYoga: 'యోగా మరియు స్ట్రెచింగ్',
+    enhancedYogaDesc: 'మనసు-శరీర సంక్షేమం కోసం మృదువైన ఆసనలు మరియు స్ట్రెచింగ్',
+    choosePose: 'భంగిమను ఎంచుకోండి',
+    nextPose: 'తదుపరి భంగిమ'
   },
   
   ta: {
@@ -388,7 +401,7 @@ export const translations = {
     hands: 'கைகள்',
     chest: 'மார்பு',
     abdomen: 'வயிறு',
-    back: 'முதுகு',
+    backPart: 'முதுகு',
     buttocks: 'இடுப்பு',
     thighs: 'தொடைகள்',
     calves: 'கால்கள்',
@@ -398,7 +411,20 @@ export const translations = {
     chestAbdomen: 'மார்பு மற்றும் வயிறு',
     backButtocks: 'முதுகு மற்றும் இடுப்பு',
     thighsCalves: 'தொடைகள் மற்றும் கால்கள்',
-    calvesFeet: 'கால்கள் மற்றும் பாதங்கள்'
+    calvesFeet: 'கால்கள் மற்றும் பாதங்கள்',
+    
+    // PMR specific
+    pmr: 'முற்போக்கான தசை தளர்வு',
+    pmrDesc: 'முறையான தசை தளர்வு மூலம் மன அழுத்தத்தை வெளியிடுங்கள்',
+    groups: 'குழுக்கள்',
+    relax: 'ஓய்வெடுங்கள்',
+    tense: 'இறுக்கவும்',
+    
+    // Yoga specific
+    enhancedYoga: 'யோகா மற்றும் நீட்டிப்பு',
+    enhancedYogaDesc: 'மன-உடல் நலனுக்கான மென்மையான ஆசனங்கள் மற்றும் நீட்டிப்புகள்',
+    choosePose: 'நிலைப்பாட்டைத் தேர்ந்தெடுக்கவும்',
+    nextPose: 'அடுத்த நிலைப்பாடு'
   },
 
   bn: {
@@ -484,7 +510,7 @@ export const translations = {
     hands: 'হাত',
     chest: 'বুক',
     abdomen: 'পেট',
-    back: 'পিঠ',
+    backPart: 'পিঠ',
     buttocks: 'নিতম্ব',
     thighs: 'উরু',
     calves: 'পায়ের গোছা',
@@ -494,7 +520,20 @@ export const translations = {
     chestAbdomen: 'বুক এবং পেট',
     backButtocks: 'পিঠ এবং নিতম্ব',
     thighsCalves: 'উরু এবং পায়ের গোছা',
-    calvesFeet: 'পায়ের গোছা এবং পা'
+    calvesFeet: 'পায়ের গোছা এবং পা',
+    
+    // PMR specific
+    pmr: 'প্রগতিশীল পেশী শিথিলকরণ',
+    pmrDesc: 'পদ্ধতিগত পেশী শিথিলতার মাধ্যমে টেনশন মুক্ত করুন',
+    groups: 'গোষ্ঠী',
+    relax: 'শিথিল করুন',
+    tense: 'টানটান করুন',
+    
+    // Yoga specific
+    enhancedYoga: 'যোগ এবং প্রসারণ',
+    enhancedYogaDesc: 'মন-শরীর সুস্থতার জন্য কোমল আসন এবং প্রসারণ',
+    choosePose: 'ভঙ্গি নির্বাচন করুন',
+    nextPose: 'পরবর্তী ভঙ্গি'
   }
 };
 
