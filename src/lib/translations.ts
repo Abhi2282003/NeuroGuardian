@@ -94,12 +94,16 @@ export const translations = {
     thighsCalves: 'Thighs & Calves',
     calvesFeet: 'Calves & Feet',
     
-    // Missing keys
-    groups: 'Groups',
+    // PMR specific
     pmr: 'Progressive Muscle Relaxation',
     pmrDesc: 'Release tension through systematic muscle relaxation',
+    groups: 'Groups',
     relax: 'Relax',
     tense: 'Tense',
+    
+    // Yoga specific
+    enhancedYoga: 'Yoga & Stretching',
+    enhancedYogaDesc: 'Gentle poses and stretching for mind-body wellness',
     choosePose: 'Choose Pose',
     nextPose: 'Next Pose'
   },
@@ -199,12 +203,16 @@ export const translations = {
     thighsCalves: 'जांघें और पिंडलियां',
     calvesFeet: 'पिंडलियां और पैर',
     
-    // Missing keys
+    // PMR specific
     groups: 'समूह',
     pmr: 'प्रगतिशील मांसपेशी शिथिलीकरण',
     pmrDesc: 'व्यवस्थित मांसपेशी शिथिलीकरण के माध्यम से तनाव मुक्त करें',
     relax: 'आराम करें',
     tense: 'तनाव',
+    
+    // Yoga specific
+    enhancedYoga: 'योग और स्ट्रेचिंग',
+    enhancedYogaDesc: 'मन-शरीर कल्याण के लिए कोमल आसन और स्ट्रेचिंग',
     choosePose: 'आसन चुनें',
     nextPose: 'अगला आसन'
   },

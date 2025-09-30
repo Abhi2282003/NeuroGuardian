@@ -311,16 +311,16 @@ export const EnhancedYogaStretching = ({ onBack }: EnhancedYogaStretchingProps) 
           </div>
         </div>
         <CardTitle className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-          {t.yoga.enhancedYoga}
+          {t.enhancedYoga || t.yoga}
         </CardTitle>
-        <p className="text-foreground/70">{t.yoga.enhancedYogaDesc}</p>
+        <p className="text-foreground/70">{t.enhancedYogaDesc || t.yogaDesc}</p>
       </CardHeader>
 
       <CardContent className="p-6">
         {!isActive && !isCompleted && (
           <div className="space-y-6">
             <div>
-              <h3 className="text-lg font-semibold mb-3 text-center">{t.pmr.choosePose}</h3>
+              <h3 className="text-lg font-semibold mb-3 text-center">{t.choosePose || 'Choose a pose'}</h3>
               <div className="grid md:grid-cols-3 gap-4">
                 {Object.entries(yogaPoses).map(([key, sequence]) => (
                   <Button
@@ -385,7 +385,7 @@ export const EnhancedYogaStretching = ({ onBack }: EnhancedYogaStretchingProps) 
               {currentPoseIndex < currentSequence.poses.length - 1 && (
                 <Button variant="outline" onClick={skipToNext}>
                   <SkipForward className="w-4 h-4 mr-2" />
-                  {t.pmr.nextPose}
+                  {t.nextPose || 'Next Pose'}
                 </Button>
               )}
               <Button variant="outline" onClick={resetSession}>
