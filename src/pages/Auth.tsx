@@ -29,7 +29,7 @@ export default function Auth() {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
-        navigate('/');
+        navigate('/dashboard');
       }
     });
   }, [navigate]);
@@ -98,7 +98,7 @@ export default function Auth() {
             throw error;
           }
         } else {
-          navigate('/');
+          navigate('/dashboard');
         }
       }
     } catch (error) {
