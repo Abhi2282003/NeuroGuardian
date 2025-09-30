@@ -52,25 +52,30 @@ export default function Home() {
 
       {/* Hero Section */}
       <div className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-cyan-500/10" />
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-background to-cyan-500/20 animate-pulse" />
+        <div className="absolute inset-0">
+          <div className="absolute top-20 left-10 w-72 h-72 bg-primary/10 rounded-full blur-3xl animate-pulse" />
+          <div className="absolute bottom-20 right-10 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl animate-pulse delay-1000" />
+        </div>
         
-        <div className="relative max-w-7xl mx-auto px-4 py-20 sm:px-6 lg:px-8">
-          <div className="text-center space-y-8">
-            <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-card/50 border border-primary/20 backdrop-blur-sm">
-              <Brain className="h-5 w-5 text-primary" />
-              <span className="text-sm font-medium">Neuro-Wellness Platform</span>
+        <div className="relative max-w-7xl mx-auto px-4 py-24 sm:px-6 lg:px-8">
+          <div className="text-center space-y-10">
+            <div className="inline-flex items-center gap-3 px-6 py-3 rounded-full bg-primary/20 border-2 border-primary/40 backdrop-blur-md shadow-gentle">
+              <Brain className="h-6 w-6 text-primary animate-pulse" />
+              <span className="text-base font-semibold text-primary">Next-Gen Neuro-Wellness Platform</span>
             </div>
             
-            <h1 className="text-5xl md:text-7xl font-bold">
-              <span className="bg-gradient-to-r from-primary via-cyan-400 to-primary bg-clip-text text-transparent">
+            <h1 className="text-6xl md:text-8xl font-extrabold leading-tight">
+              <span className="bg-gradient-to-r from-primary via-cyan-400 to-primary bg-clip-text text-transparent animate-pulse">
                 Monitor Your Mind,
               </span>
               <br />
-              <span className="text-foreground">Master Your Wellness</span>
+              <span className="text-foreground drop-shadow-lg">Master Your Wellness</span>
             </h1>
             
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              AI-powered neurological screening, real-time EEG monitoring, and evidence-based mindfulness practices
+            <p className="text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+              Cutting-edge AI-powered neurological screening, real-time EEG monitoring with BioAmp devices, 
+              and science-backed mindfulness practices for optimal brain health
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">

@@ -1,8 +1,9 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Brain, Waves, Heart, Sparkles, Clock, Play, Pause, BarChart3 } from "lucide-react";
+import { Brain, Waves, Heart, Sparkles, Clock, Play, Pause, BarChart3, ArrowLeft } from "lucide-react";
 import { BreathingExercise } from "@/components/BreathingExercise";
 import { MeditationTimer } from "@/components/MeditationTimer";
 import { TechniqueDetail } from "@/components/TechniqueDetail";
@@ -187,6 +188,14 @@ const Index = () => {
     <div className="min-h-screen bg-gradient-background">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
+        <div className="mb-6">
+          <Link to="/">
+            <Button variant="outline">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Home
+            </Button>
+          </Link>
+        </div>
         <div className="text-center mb-12">
           <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-primary bg-clip-text text-transparent">
             Mindful Wellness
