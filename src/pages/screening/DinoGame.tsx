@@ -2,34 +2,43 @@ import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Play, Trophy } from 'lucide-react';
-
-type ObstacleType = 'cactus-small' | 'cactus-large' | 'cactus-double' | 'pterodactyl-high' | 'pterodactyl-mid' | 'pterodactyl-low';
-
-interface Obstacle {
-  x: number;
-  type: ObstacleType;
-  width: number;
-  height: number;
-  yOffset: number;
-}
+import { ArrowLeft, Trophy } from 'lucide-react';
 
 export default function DinoGame() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [gameStarted, setGameStarted] = useState(false);
   const [gameOver, setGameOver] = useState(false);
   const [score, setScore] = useState(0);
-  const [highScore, setHighScore] = useState(0);
-  const gameStateRef = useRef({
-    dinoY: 0,
-    dinoVelocity: 0,
-    isJumping: false,
-    isDucking: false,
-    obstacles: [] as Obstacle[],
-    clouds: [] as { x: number; y: number; speed: number }[],
-    frameCount: 0,
+  const [highScore, setHighScore] = useState(() => {
+    const saved = localStorage.getItem('dino-high-score');
+    return saved ? parseInt(saved) : 0;
+  });
+
+  const gameRef = useRef({
+    dino: {
+      x: 25,
+      y: 0,
+      width: 44,
+      height: 47,
+      velocityY: 0,
+      jumping: false,
+      ducking: false,
+      legFrame: 0
+    },
+    obstacles: [] as Array<{
+      x: number;
+      type: 'cactus1' | 'cactus2' | 'cactus3' | 'ptero';
+      width: number;
+      height: number;
+      y: number;
+    }>,
+    clouds: [] as Array<{ x: number; y: number }>,
+    ground: { x: 0 },
     gameSpeed: 6,
-    legFrame: 0
+    score: 0,
+    frameCount: 0,
+    gravity: 0.6,
+    jumpPower: -12
   });
 
   useEffect(() => {
@@ -46,19 +55,20 @@ export default function DinoGame() {
       } else if (e.code === 'ArrowDown') {
         e.preventDefault();
         if (gameStarted && !gameOver) {
-          gameStateRef.current.isDucking = true;
+          gameRef.current.dino.ducking = true;
         }
       }
     };
 
     const handleKeyUp = (e: KeyboardEvent) => {
       if (e.code === 'ArrowDown') {
-        gameStateRef.current.isDucking = false;
+        gameRef.current.dino.ducking = false;
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
+    
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
@@ -70,36 +80,52 @@ export default function DinoGame() {
 
     const canvas = canvasRef.current;
     if (!canvas) return;
-
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const gameLoop = setInterval(() => {
-      updateGame();
-      drawGame(ctx, canvas);
-    }, 1000 / 60); // 60 FPS
+    let animationId: number;
+    
+    const gameLoop = () => {
+      update();
+      draw(ctx);
+      animationId = requestAnimationFrame(gameLoop);
+    };
 
-    return () => clearInterval(gameLoop);
+    gameLoop();
+
+    return () => {
+      if (animationId) cancelAnimationFrame(animationId);
+    };
   }, [gameStarted, gameOver]);
 
   const startGame = () => {
     setGameStarted(true);
     setGameOver(false);
     setScore(0);
-    gameStateRef.current = {
-      dinoY: 0,
-      dinoVelocity: 0,
-      isJumping: false,
-      isDucking: false,
+    
+    gameRef.current = {
+      dino: {
+        x: 25,
+        y: 0,
+        width: 44,
+        height: 47,
+        velocityY: 0,
+        jumping: false,
+        ducking: false,
+        legFrame: 0
+      },
       obstacles: [],
-      clouds: Array.from({ length: 5 }, (_, i) => ({
-        x: i * 200 + 100,
-        y: 30 + Math.random() * 40,
-        speed: 0.5 + Math.random() * 0.5
-      })),
-      frameCount: 0,
+      clouds: [
+        { x: 150, y: 50 },
+        { x: 400, y: 30 },
+        { x: 650, y: 60 }
+      ],
+      ground: { x: 0 },
       gameSpeed: 6,
-      legFrame: 0
+      score: 0,
+      frameCount: 0,
+      gravity: 0.6,
+      jumpPower: -12
     };
   };
 
@@ -108,153 +134,138 @@ export default function DinoGame() {
   };
 
   const jump = () => {
-    const state = gameStateRef.current;
-    if (!state.isJumping && state.dinoY === 0 && !state.isDucking) {
-      state.dinoVelocity = -16;
-      state.isJumping = true;
+    const { dino } = gameRef.current;
+    if (!dino.jumping && dino.y === 0) {
+      dino.velocityY = gameRef.current.jumpPower;
+      dino.jumping = true;
     }
   };
 
-  const spawnObstacle = () => {
-    const state = gameStateRef.current;
-    const obstacleTypes: ObstacleType[] = [
-      'cactus-small',
-      'cactus-large', 
-      'cactus-double',
-      'pterodactyl-high',
-      'pterodactyl-mid',
-      'pterodactyl-low'
-    ];
-    
-    const type = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
-    let width = 20;
-    let height = 40;
-    let yOffset = 0;
+  const update = () => {
+    const game = gameRef.current;
+    const { dino } = game;
 
-    switch (type) {
-      case 'cactus-small':
-        width = 17;
-        height = 35;
-        break;
-      case 'cactus-large':
-        width = 25;
-        height = 50;
-        break;
-      case 'cactus-double':
-        width = 40;
-        height = 50;
-        break;
-      case 'pterodactyl-high':
-        width = 46;
-        height = 40;
-        yOffset = -85;
-        break;
-      case 'pterodactyl-mid':
-        width = 46;
-        height = 40;
-        yOffset = -50;
-        break;
-      case 'pterodactyl-low':
-        width = 46;
-        height = 40;
-        yOffset = -20;
-        break;
+    // Update dino physics
+    dino.velocityY += game.gravity;
+    dino.y += dino.velocityY;
+
+    if (dino.y >= 0) {
+      dino.y = 0;
+      dino.velocityY = 0;
+      dino.jumping = false;
     }
 
-    state.obstacles.push({
-      x: 800,
-      type,
-      width,
-      height,
-      yOffset
-    });
-  };
-
-  const updateGame = () => {
-    const state = gameStateRef.current;
-    
-    // Update dino position
-    if (state.isDucking && !state.isJumping) {
-      // When ducking, stay on ground
+    // Update dino dimensions based on ducking
+    if (dino.ducking && !dino.jumping) {
+      dino.width = 59;
+      dino.height = 26;
     } else {
-      state.dinoY += state.dinoVelocity;
-      state.dinoVelocity += 0.8; // Gravity
-    }
-
-    if (state.dinoY > 0) {
-      state.dinoY = 0;
-      state.dinoVelocity = 0;
-      state.isJumping = false;
+      dino.width = 44;
+      dino.height = 47;
     }
 
     // Leg animation
-    if (state.frameCount % 8 === 0 && !state.isJumping) {
-      state.legFrame = state.legFrame === 0 ? 1 : 0;
+    if (game.frameCount % 6 === 0 && !dino.jumping) {
+      dino.legFrame = dino.legFrame === 0 ? 1 : 0;
     }
 
+    // Spawn obstacles
+    game.frameCount++;
+    if (game.frameCount % 90 === 0) {
+      const types: Array<'cactus1' | 'cactus2' | 'cactus3' | 'ptero'> = ['cactus1', 'cactus2', 'cactus3', 'ptero'];
+      const type = types[Math.floor(Math.random() * types.length)];
+      
+      let width = 17, height = 35, y = 0;
+      
+      if (type === 'cactus1') {
+        width = 17;
+        height = 35;
+      } else if (type === 'cactus2') {
+        width = 34;
+        height = 35;
+      } else if (type === 'cactus3') {
+        width = 51;
+        height = 35;
+      } else if (type === 'ptero') {
+        width = 46;
+        height = 40;
+        y = Math.random() > 0.5 ? -70 : -35;
+      }
+      
+      game.obstacles.push({ x: 600, type, width, height, y });
+    }
+
+    // Update obstacles
+    game.obstacles = game.obstacles.filter(obs => {
+      obs.x -= game.gameSpeed;
+      return obs.x > -obs.width;
+    });
+
     // Update clouds
-    state.clouds.forEach(cloud => {
-      cloud.x -= cloud.speed;
-      if (cloud.x < -50) {
-        cloud.x = 800;
+    game.clouds.forEach(cloud => {
+      cloud.x -= game.gameSpeed * 0.2;
+      if (cloud.x < -46) {
+        cloud.x = 600;
         cloud.y = 30 + Math.random() * 40;
       }
     });
 
-    // Spawn obstacles
-    state.frameCount++;
-    const spawnRate = Math.max(70, 120 - Math.floor(state.frameCount / 500));
-    if (state.frameCount % spawnRate === 0 && state.obstacles.length < 3) {
-      spawnObstacle();
+    // Update ground
+    game.ground.x -= game.gameSpeed;
+    if (game.ground.x <= -600) {
+      game.ground.x = 0;
     }
 
-    // Update obstacles
-    state.obstacles = state.obstacles
-      .map(obs => ({ ...obs, x: obs.x - state.gameSpeed }))
-      .filter(obs => obs.x > -obs.width);
+    // Collision detection
+    const groundY = 150;
+    const dinoRect = {
+      x: dino.x + 4,
+      y: groundY - dino.height - dino.y + 4,
+      width: dino.width - 8,
+      height: dino.height - 8
+    };
 
-    // Check collision
-    const groundY = 200;
-    const dinoX = 50;
-    const dinoWidth = state.isDucking ? 60 : 44;
-    const dinoHeight = state.isDucking ? 30 : 47;
-    const dinoGroundY = groundY - dinoHeight;
-    
-    for (const obs of state.obstacles) {
-      const obsY = obs.type.includes('pterodactyl') 
-        ? groundY + obs.yOffset - obs.height
-        : groundY - obs.height;
+    for (const obs of game.obstacles) {
+      const obsRect = {
+        x: obs.x + 4,
+        y: obs.type === 'ptero' ? groundY + obs.y - obs.height + 4 : groundY - obs.height + 4,
+        width: obs.width - 8,
+        height: obs.height - 8
+      };
 
-      // Collision detection with better hitbox
       if (
-        dinoX + 5 < obs.x + obs.width - 5 &&
-        dinoX + dinoWidth - 5 > obs.x + 5 &&
-        dinoGroundY - state.dinoY < obsY + obs.height - 5 &&
-        dinoGroundY - state.dinoY + dinoHeight - 5 > obsY
+        dinoRect.x < obsRect.x + obsRect.width &&
+        dinoRect.x + dinoRect.width > obsRect.x &&
+        dinoRect.y < obsRect.y + obsRect.height &&
+        dinoRect.y + dinoRect.height > obsRect.y
       ) {
         endGame();
         return;
       }
     }
 
-    // Update score and speed
-    setScore(Math.floor(state.frameCount / 10));
-    if (state.frameCount % 100 === 0) {
-      state.gameSpeed += 0.2;
+    // Update score
+    game.score = Math.floor(game.frameCount / 10);
+    setScore(game.score);
+
+    // Increase speed
+    if (game.frameCount % 200 === 0 && game.gameSpeed < 13) {
+      game.gameSpeed += 0.5;
     }
   };
 
-  const drawGame = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) => {
-    const state = gameStateRef.current;
-    const groundY = 200;
-    
+  const draw = (ctx: CanvasRenderingContext2D) => {
+    const game = gameRef.current;
+    const { dino } = game;
+    const groundY = 150;
+
     // Clear canvas
     ctx.fillStyle = '#f7f7f7';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillRect(0, 0, 600, 200);
 
     // Draw clouds
-    ctx.fillStyle = '#c4c4c4';
-    state.clouds.forEach(cloud => {
+    ctx.fillStyle = '#ccc';
+    game.clouds.forEach(cloud => {
       drawCloud(ctx, cloud.x, cloud.y);
     });
 
@@ -263,163 +274,181 @@ export default function DinoGame() {
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.moveTo(0, groundY);
-    ctx.lineTo(800, groundY);
+    ctx.lineTo(600, groundY);
     ctx.stroke();
 
-    // Draw ground dots
-    for (let i = 0; i < 40; i++) {
-      const x = (i * 40 + state.frameCount * 3) % 800;
+    // Draw ground texture
+    for (let i = 0; i < 15; i++) {
+      const x = (i * 50 + game.ground.x) % 600;
       ctx.fillStyle = '#535353';
-      ctx.fillRect(x, groundY + 5, 2, 2);
+      ctx.fillRect(x, groundY + 2, 2, 2);
+      ctx.fillRect(x + 10, groundY + 2, 2, 2);
     }
 
     // Draw dino
-    const dinoY = groundY - (state.isDucking ? 30 : 47) - state.dinoY;
-    if (state.isDucking) {
-      drawDinoDucking(ctx, 50, dinoY);
+    const dinoY = groundY - dino.height - dino.y;
+    ctx.fillStyle = '#535353';
+    
+    if (dino.ducking) {
+      drawDinoDucking(ctx, dino.x, dinoY);
     } else {
-      drawDino(ctx, 50, dinoY, state.legFrame);
+      drawDino(ctx, dino.x, dinoY, dino.legFrame, dino.jumping);
     }
 
     // Draw obstacles
-    state.obstacles.forEach(obs => {
-      const obsY = obs.type.includes('pterodactyl')
-        ? groundY + obs.yOffset - obs.height
-        : groundY - obs.height;
-
-      if (obs.type.includes('cactus')) {
-        drawCactus(ctx, obs.x, obsY, obs.type);
+    game.obstacles.forEach(obs => {
+      const obsY = obs.type === 'ptero' ? groundY + obs.y - obs.height : groundY - obs.height;
+      
+      if (obs.type === 'ptero') {
+        drawPtero(ctx, obs.x, obsY, game.frameCount);
       } else {
-        drawPterodactyl(ctx, obs.x, obsY, state.frameCount);
+        drawCactus(ctx, obs.x, obsY, obs.type);
       }
     });
 
     // Draw score
     ctx.fillStyle = '#535353';
-    ctx.font = 'bold 20px monospace';
+    ctx.font = 'bold 12px monospace';
     ctx.textAlign = 'right';
-    ctx.fillText(`HI ${String(highScore).padStart(5, '0')} ${String(score).padStart(5, '0')}`, 780, 30);
+    const scoreText = `HI ${String(highScore).padStart(5, '0')}  ${String(game.score).padStart(5, '0')}`;
+    ctx.fillText(scoreText, 580, 20);
+
+    // Game Over text
+    if (gameOver) {
+      ctx.fillStyle = '#535353';
+      ctx.font = 'bold 24px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText('G A M E  O V E R', 300, 70);
+      
+      ctx.font = '12px Arial';
+      ctx.fillText('Press SPACE to restart', 300, 95);
+    }
   };
 
   const drawCloud = (ctx: CanvasRenderingContext2D, x: number, y: number) => {
     ctx.beginPath();
-    ctx.arc(x, y, 10, 0, Math.PI * 2);
-    ctx.arc(x + 15, y, 15, 0, Math.PI * 2);
-    ctx.arc(x + 30, y, 12, 0, Math.PI * 2);
+    ctx.arc(x, y, 8, Math.PI * 0.5, Math.PI * 1.5);
+    ctx.arc(x + 8, y - 4, 8, Math.PI * 1, Math.PI * 1.85);
+    ctx.arc(x + 16, y - 2, 8, Math.PI * 1.37, Math.PI * 1.91);
+    ctx.arc(x + 23, y, 7, Math.PI * 1.5, Math.PI * 0.5);
+    ctx.closePath();
     ctx.fill();
   };
 
-  const drawDino = (ctx: CanvasRenderingContext2D, x: number, y: number, legFrame: number) => {
-    ctx.fillStyle = '#535353';
-    
+  const drawDino = (ctx: CanvasRenderingContext2D, x: number, y: number, legFrame: number, jumping: boolean) => {
     // Body
-    ctx.fillRect(x + 15, y + 10, 25, 25);
-    
-    // Head
-    ctx.fillRect(x + 5, y, 20, 15);
-    ctx.fillRect(x, y + 5, 5, 10);
-    
-    // Eye
-    ctx.fillStyle = '#fff';
-    ctx.fillRect(x + 10, y + 5, 5, 5);
-    
-    // Mouth
-    ctx.fillStyle = '#535353';
-    ctx.fillRect(x + 20, y + 10, 5, 3);
-    
-    // Arms
-    ctx.fillRect(x + 35, y + 15, 5, 10);
-    
+    ctx.fillRect(x + 6, y + 4, 22, 16);
     // Tail
-    ctx.fillRect(x + 30, y + 25, 15, 5);
-    ctx.fillRect(x + 40, y + 20, 5, 5);
+    ctx.fillRect(x + 24, y + 16, 8, 4);
+    ctx.fillRect(x + 28, y + 12, 4, 4);
+    // Neck
+    ctx.fillRect(x + 6, y, 6, 10);
+    // Head
+    ctx.fillRect(x, y, 6, 8);
+    ctx.fillRect(x - 4, y + 2, 4, 4);
+    // Eye
+    ctx.fillStyle = '#f7f7f7';
+    ctx.fillRect(x + 2, y + 2, 2, 2);
+    ctx.fillStyle = '#535353';
+    // Arm
+    ctx.fillRect(x + 18, y + 10, 6, 2);
+    ctx.fillRect(x + 22, y + 8, 2, 2);
     
-    // Legs (animated)
-    if (legFrame === 0) {
-      ctx.fillRect(x + 20, y + 35, 5, 12);
-      ctx.fillRect(x + 30, y + 35, 5, 12);
+    // Legs
+    if (jumping) {
+      ctx.fillRect(x + 2, y + 20, 6, 14);
+      ctx.fillRect(x + 12, y + 20, 6, 14);
     } else {
-      ctx.fillRect(x + 20, y + 35, 5, 10);
-      ctx.fillRect(x + 30, y + 35, 5, 14);
+      if (legFrame === 0) {
+        ctx.fillRect(x + 2, y + 20, 6, 14);
+        ctx.fillRect(x + 2, y + 34, 4, 2);
+        ctx.fillRect(x + 12, y + 20, 6, 16);
+        ctx.fillRect(x + 12, y + 36, 4, 2);
+      } else {
+        ctx.fillRect(x + 2, y + 20, 6, 16);
+        ctx.fillRect(x + 2, y + 36, 4, 2);
+        ctx.fillRect(x + 12, y + 20, 6, 14);
+        ctx.fillRect(x + 12, y + 34, 4, 2);
+      }
     }
   };
 
   const drawDinoDucking = (ctx: CanvasRenderingContext2D, x: number, y: number) => {
-    ctx.fillStyle = '#535353';
-    
     // Body (elongated)
-    ctx.fillRect(x + 15, y + 15, 45, 15);
-    
+    ctx.fillRect(x + 10, y + 18, 40, 8);
     // Head
-    ctx.fillRect(x + 5, y + 10, 20, 12);
-    
+    ctx.fillRect(x, y + 10, 16, 8);
+    ctx.fillRect(x - 4, y + 12, 4, 4);
     // Eye
-    ctx.fillStyle = '#fff';
-    ctx.fillRect(x + 10, y + 13, 5, 5);
-    
-    // Tail
+    ctx.fillStyle = '#f7f7f7';
+    ctx.fillRect(x + 2, y + 12, 2, 2);
     ctx.fillStyle = '#535353';
-    ctx.fillRect(x + 50, y + 10, 10, 5);
+    // Tail
+    ctx.fillRect(x + 40, y + 10, 10, 6);
+    ctx.fillRect(x + 46, y + 6, 4, 4);
+    // Legs
+    ctx.fillRect(x + 16, y + 26, 10, 2);
+    ctx.fillRect(x + 32, y + 26, 10, 2);
   };
 
-  const drawCactus = (ctx: CanvasRenderingContext2D, x: number, y: number, type: ObstacleType) => {
-    ctx.fillStyle = '#535353';
-    
-    if (type === 'cactus-small') {
-      // Small single cactus
-      ctx.fillRect(x + 5, y + 10, 12, 25);
-      ctx.fillRect(x, y + 15, 5, 10);
-      ctx.fillRect(x + 17, y + 20, 5, 10);
-    } else if (type === 'cactus-large') {
-      // Large single cactus
-      ctx.fillRect(x + 7, y, 15, 50);
-      ctx.fillRect(x, y + 10, 7, 15);
-      ctx.fillRect(x + 22, y + 20, 7, 15);
-    } else if (type === 'cactus-double') {
-      // Double cactus
-      ctx.fillRect(x + 5, y + 10, 12, 40);
-      ctx.fillRect(x, y + 15, 5, 15);
-      ctx.fillRect(x + 25, y + 5, 12, 45);
-      ctx.fillRect(x + 37, y + 20, 5, 15);
+  const drawCactus = (ctx: CanvasRenderingContext2D, x: number, y: number, type: string) => {
+    if (type === 'cactus1') {
+      ctx.fillRect(x + 2, y + 10, 12, 25);
+      ctx.fillRect(x, y + 12, 2, 8);
+      ctx.fillRect(x + 14, y + 17, 2, 8);
+    } else if (type === 'cactus2') {
+      ctx.fillRect(x + 2, y + 10, 12, 25);
+      ctx.fillRect(x, y + 12, 2, 8);
+      ctx.fillRect(x + 14, y + 17, 2, 8);
+      ctx.fillRect(x + 19, y + 10, 12, 25);
+      ctx.fillRect(x + 17, y + 12, 2, 8);
+      ctx.fillRect(x + 31, y + 17, 2, 8);
+    } else if (type === 'cactus3') {
+      ctx.fillRect(x + 2, y + 10, 12, 25);
+      ctx.fillRect(x, y + 12, 2, 8);
+      ctx.fillRect(x + 14, y + 17, 2, 8);
+      ctx.fillRect(x + 19, y + 10, 12, 25);
+      ctx.fillRect(x + 17, y + 12, 2, 8);
+      ctx.fillRect(x + 31, y + 17, 2, 8);
+      ctx.fillRect(x + 36, y + 10, 12, 25);
+      ctx.fillRect(x + 34, y + 15, 2, 8);
+      ctx.fillRect(x + 48, y + 12, 2, 8);
     }
   };
 
-  const drawPterodactyl = (ctx: CanvasRenderingContext2D, x: number, y: number, frame: number) => {
-    ctx.fillStyle = '#535353';
+  const drawPtero = (ctx: CanvasRenderingContext2D, x: number, y: number, frame: number) => {
+    const wingUp = Math.floor(frame / 10) % 2 === 0;
     
     // Body
-    ctx.fillRect(x + 10, y + 15, 25, 15);
-    
+    ctx.fillRect(x + 12, y + 8, 20, 14);
     // Head
-    ctx.fillRect(x + 5, y + 10, 15, 10);
-    
+    ctx.fillRect(x + 6, y + 6, 12, 10);
     // Beak
-    ctx.fillRect(x, y + 12, 5, 5);
-    
+    ctx.fillRect(x, y + 8, 6, 6);
     // Eye
-    ctx.fillStyle = '#fff';
-    ctx.fillRect(x + 8, y + 13, 3, 3);
-    
-    // Wings (flapping animation)
+    ctx.fillStyle = '#f7f7f7';
+    ctx.fillRect(x + 8, y + 8, 2, 2);
     ctx.fillStyle = '#535353';
-    if (Math.floor(frame / 10) % 2 === 0) {
-      // Wings up
-      ctx.fillRect(x + 15, y, 20, 10);
-      ctx.fillRect(x + 15, y + 30, 20, 10);
+    
+    // Wings
+    if (wingUp) {
+      ctx.fillRect(x + 16, y, 20, 8);
+      ctx.fillRect(x + 16, y + 22, 20, 8);
     } else {
-      // Wings down
-      ctx.fillRect(x + 15, y + 5, 20, 10);
-      ctx.fillRect(x + 15, y + 25, 20, 10);
+      ctx.fillRect(x + 16, y + 4, 20, 8);
+      ctx.fillRect(x + 16, y + 18, 20, 8);
     }
     
     // Tail
-    ctx.fillRect(x + 30, y + 20, 15, 5);
+    ctx.fillRect(x + 28, y + 12, 12, 6);
+    ctx.fillRect(x + 36, y + 14, 6, 2);
   };
 
   const endGame = () => {
     setGameOver(true);
     if (score > highScore) {
       setHighScore(score);
+      localStorage.setItem('dino-high-score', score.toString());
     }
   };
 
@@ -437,19 +466,19 @@ export default function DinoGame() {
           <CardHeader>
             <CardTitle className="text-3xl flex items-center gap-3">
               <Trophy className="h-8 w-8 text-primary" />
-              Chrome Dino Game - Concentration Test
+              T-Rex Chrome Dino Game
             </CardTitle>
             <CardDescription>
-              Classic Chrome dinosaur game to test reaction time and sustained attention
+              A replica of the hidden game from Chrome offline mode - Tests reaction time and sustained attention
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="border-4 border-primary/20 rounded-lg overflow-hidden bg-white relative">
+            <div className="border-4 border-gray-300 rounded-lg overflow-hidden bg-[#f7f7f7] relative">
               <canvas
                 ref={canvasRef}
-                width={800}
-                height={250}
-                className="w-full"
+                width={600}
+                height={200}
+                className="w-full cursor-pointer"
                 onClick={() => {
                   if (!gameStarted) startGame();
                   else if (gameOver) resetGame();
@@ -458,28 +487,10 @@ export default function DinoGame() {
               />
               
               {!gameStarted && (
-                <div className="absolute inset-0 flex items-center justify-center bg-white/90 backdrop-blur-sm">
-                  <div className="text-center space-y-4">
-                    <div className="text-2xl font-bold text-gray-700">Press SPACE or Click to Start</div>
-                    <div className="text-sm text-gray-500">↑ Jump | ↓ Duck</div>
-                    <Button size="lg" onClick={startGame}>
-                      <Play className="mr-2 h-5 w-5" />
-                      Start Game
-                    </Button>
-                  </div>
-                </div>
-              )}
-
-              {gameOver && (
-                <div className="absolute inset-0 flex items-center justify-center bg-white/90 backdrop-blur-sm">
-                  <div className="text-center space-y-4">
-                    <div className="text-3xl font-bold text-red-600">Game Over!</div>
-                    <div className="text-xl text-gray-700">Score: {score}</div>
-                    {score > highScore && <div className="text-lg text-green-600">🎉 New High Score!</div>}
-                    <Button size="lg" onClick={resetGame}>
-                      <Play className="mr-2 h-5 w-5" />
-                      Play Again (SPACE)
-                    </Button>
+                <div className="absolute inset-0 flex items-center justify-center bg-[#f7f7f7]/95">
+                  <div className="text-center space-y-2">
+                    <div className="text-xl font-bold text-gray-700">Press SPACE to Start</div>
+                    <div className="text-sm text-gray-500">↑ or SPACE = Jump  |  ↓ = Duck</div>
                   </div>
                 </div>
               )}
@@ -487,14 +498,15 @@ export default function DinoGame() {
 
             <Card className="bg-muted/30">
               <CardHeader>
-                <CardTitle className="text-lg">How to Play</CardTitle>
+                <CardTitle className="text-lg">Controls</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2 text-sm">
-                <p>• <strong>SPACE or ↑</strong> - Make the dino jump over obstacles</p>
-                <p>• <strong>↓</strong> - Duck under flying pterodactyls</p>
-                <p>• Avoid cacti and pterodactyls to survive</p>
-                <p>• Game speed increases as you score more points</p>
-                <p>• Tests: Reaction time, sustained attention, hand-eye coordination</p>
+                <p>• <strong>SPACE or ↑</strong> - Jump over cacti</p>
+                <p>• <strong>↓</strong> - Duck under pterodactyls</p>
+                <p>• <strong>SPACE</strong> - Start game / Restart after game over</p>
+                <p className="pt-2 text-xs text-muted-foreground">
+                  This test measures reaction time, hand-eye coordination, and sustained attention - key indicators for neurological health screening.
+                </p>
               </CardContent>
             </Card>
           </CardContent>
