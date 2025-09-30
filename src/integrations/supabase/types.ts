@@ -14,16 +14,289 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      activity_results: {
+        Row: {
+          activity_key: string
+          created_at: string | null
+          duration_sec: number | null
+          features: Json | null
+          id: string
+          notes: string | null
+          quality_flags: Json | null
+          raw_payload: Json | null
+          score: number | null
+          session_id: string | null
+        }
+        Insert: {
+          activity_key: string
+          created_at?: string | null
+          duration_sec?: number | null
+          features?: Json | null
+          id?: string
+          notes?: string | null
+          quality_flags?: Json | null
+          raw_payload?: Json | null
+          score?: number | null
+          session_id?: string | null
+        }
+        Update: {
+          activity_key?: string
+          created_at?: string | null
+          duration_sec?: number | null
+          features?: Json | null
+          id?: string
+          notes?: string | null
+          quality_flags?: Json | null
+          raw_payload?: Json | null
+          score?: number | null
+          session_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activity_results_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      attachments: {
+        Row: {
+          created_at: string | null
+          id: string
+          meta: Json | null
+          session_id: string | null
+          type: string | null
+          url: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          meta?: Json | null
+          session_id?: string | null
+          type?: string | null
+          url: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          meta?: Json | null
+          session_id?: string | null
+          type?: string | null
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attachments_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      patients: {
+        Row: {
+          age: number | null
+          consent_flags: Json | null
+          created_at: string | null
+          created_by: string | null
+          id: string
+          mrn: string | null
+          name: string
+          phone: string | null
+          sex: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          age?: number | null
+          consent_flags?: Json | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          mrn?: string | null
+          name: string
+          phone?: string | null
+          sex?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          age?: number | null
+          consent_flags?: Json | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          mrn?: string | null
+          name?: string
+          phone?: string | null
+          sex?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patients_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string | null
+          id: string
+          locale: string | null
+          name: string
+          organization: string | null
+          role: Database["public"]["Enums"]["app_role"]
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id: string
+          locale?: string | null
+          name: string
+          organization?: string | null
+          role?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          locale?: string | null
+          name?: string
+          organization?: string | null
+          role?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      risk_summaries: {
+        Row: {
+          disorder_key: Database["public"]["Enums"]["disorder_type"]
+          id: string
+          rationale: Json | null
+          risk_level: Database["public"]["Enums"]["risk_level"]
+          score: number | null
+          session_id: string | null
+          stage_label: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          disorder_key: Database["public"]["Enums"]["disorder_type"]
+          id?: string
+          rationale?: Json | null
+          risk_level: Database["public"]["Enums"]["risk_level"]
+          score?: number | null
+          session_id?: string | null
+          stage_label?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          disorder_key?: Database["public"]["Enums"]["disorder_type"]
+          id?: string
+          rationale?: Json | null
+          risk_level?: Database["public"]["Enums"]["risk_level"]
+          score?: number | null
+          session_id?: string | null
+          stage_label?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "risk_summaries_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sessions: {
+        Row: {
+          completed_at: string | null
+          created_by: string | null
+          device_info: Json | null
+          id: string
+          location: string | null
+          offline_flag: boolean | null
+          patient_id: string | null
+          started_at: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_by?: string | null
+          device_info?: Json | null
+          id?: string
+          location?: string | null
+          offline_flag?: boolean | null
+          patient_id?: string | null
+          started_at?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_by?: string | null
+          device_info?: Json | null
+          id?: string
+          location?: string | null
+          offline_flag?: boolean | null
+          patient_id?: string | null
+          started_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sessions_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sessions_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "doctor" | "health_worker" | "patient"
+      disorder_type: "parkinson" | "alzheimer" | "epilepsy"
+      risk_level: "low" | "moderate" | "high"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +423,10 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "doctor", "health_worker", "patient"],
+      disorder_type: ["parkinson", "alzheimer", "epilepsy"],
+      risk_level: ["low", "moderate", "high"],
+    },
   },
 } as const
