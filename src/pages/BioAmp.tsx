@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, Activity, Brain, Zap } from 'lucide-react';
@@ -13,6 +13,23 @@ export default function BioAmp({ onBack }: BioAmpProps) {
   const { status, isSupported, connect, disconnect, startStream, stopStream } = useSerialClient();
   const { toast } = useToast();
   const [demoMode, setDemoMode] = useState(false);
+  const [channels, setChannels] = useState<number[][]>([[], [], [], [], [], []]);
+
+  // Demo mode data generation
+  useEffect(() => {
+    if (demoMode) {
+      const interval = setInterval(() => {
+        setChannels(prev => {
+          const newChannels = prev.map((channel, idx) => {
+            const newValue = Math.sin(Date.now() / 1000 + idx) * 1000 + 8192 + (Math.random() * 200 - 100);
+            return [...channel.slice(-500), newValue];
+          });
+          return newChannels;
+        });
+      }, 4); // ~250 Hz
+      return () => clearInterval(interval);
+    }
+  }, [demoMode]);
 
   const handleConnect = async () => {
     try {
@@ -68,17 +85,26 @@ export default function BioAmp({ onBack }: BioAmpProps) {
         </div>
 
         {!isSupported() && (
-          <Card className="mb-6 border-destructive">
+          <Card className="mb-6 border-primary/50 bg-primary/5">
             <CardHeader>
-              <CardTitle className="text-destructive">Browser Not Supported</CardTitle>
+              <CardTitle>Web Serial Not Available</CardTitle>
               <CardDescription>
-                Web Serial API is not available. Please use Chrome or Edge on desktop.
+                Web Serial API requires Chrome/Edge on desktop and won't work in iframe previews.
+                <br />
+                <strong>To use hardware connection:</strong> Deploy your app first, then access it directly.
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <Button onClick={() => setDemoMode(true)} variant="secondary">
-                Enable Demo Mode
+            <CardContent className="space-y-4">
+              <Button 
+                onClick={() => setDemoMode(!demoMode)} 
+                variant={demoMode ? "default" : "secondary"}
+                className="w-full"
+              >
+                {demoMode ? '✓ Demo Mode Active' : 'Enable Demo Mode'}
               </Button>
+              <p className="text-xs text-muted-foreground">
+                Demo mode simulates 6 channels at 250 Hz for testing visualization
+              </p>
             </CardContent>
           </Card>
         )}
@@ -152,10 +178,29 @@ export default function BioAmp({ onBack }: BioAmpProps) {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="h-48 bg-muted/20 rounded-lg flex items-center justify-center">
-                <p className="text-muted-foreground">
-                  {status.streaming ? 'Streaming data...' : 'Start stream to view signals'}
-                </p>
+              <div className="h-48 bg-muted/20 rounded-lg flex items-center justify-center border border-primary/20 relative overflow-hidden">
+                {demoMode ? (
+                  <div className="absolute inset-0 flex flex-col justify-evenly p-2">
+                    {channels.slice(0, 3).map((_, idx) => (
+                      <div key={idx} className="h-full border-b border-primary/10 last:border-0 relative">
+                        <svg className="w-full h-full">
+                          <polyline
+                            points={channels[idx].slice(-200).map((val, i) => `${i * 2},${30 - (val - 8192) / 100}`).join(' ')}
+                            fill="none"
+                            stroke="hsl(var(--primary))"
+                            strokeWidth="1.5"
+                            className="animate-pulse"
+                          />
+                        </svg>
+                        <span className="absolute top-1 left-2 text-xs text-muted-foreground">Ch{idx + 1}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-muted-foreground">
+                    {status.streaming ? 'Streaming data...' : 'Start stream to view signals'}
+                  </p>
+                )}
               </div>
             </CardContent>
           </Card>

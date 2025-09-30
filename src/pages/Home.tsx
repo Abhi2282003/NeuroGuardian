@@ -64,10 +64,10 @@ export default function Home() {
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="/bioamp">
+              <Link to="/auth">
                 <Button size="lg" className="text-lg px-8">
-                  <Activity className="mr-2 h-5 w-5" />
-                  Start EEG Monitoring
+                  <Brain className="mr-2 h-5 w-5" />
+                  Get Started
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </Link>
