@@ -19,7 +19,7 @@ interface BioAmpProps {
 export default function BioAmp({ onBack }: BioAmpProps) {
   const { status, isSupported, connect, disconnect, startStream, stopStream } = useSerialClient();
   const { toast } = useToast();
-  const [demoMode, setDemoMode] = useState(false);
+  const [demoMode, setDemoMode] = useState(true); // Enable demo by default
   const [channels, setChannels] = useState<number[][]>([[], [], [], [], [], []]);
   const [isPaused, setIsPaused] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
@@ -85,12 +85,14 @@ export default function BioAmp({ onBack }: BioAmpProps) {
 
   const handleConnect = async () => {
     try {
+      setDemoMode(false); // Disable demo when connecting real device
       await connect();
       toast({
         title: 'Connected',
         description: 'BioAmp device connected successfully'
       });
     } catch (error) {
+      console.error('Connection error:', error);
       toast({
         title: 'Connection Failed',
         description: error instanceof Error ? error.message : 'Failed to connect',
@@ -252,23 +254,31 @@ export default function BioAmp({ onBack }: BioAmpProps) {
             <CardHeader>
               <CardTitle>Web Serial Not Available</CardTitle>
               <CardDescription>
-                Web Serial API requires Chrome/Edge on desktop and won't work in iframe previews.
+                Web Serial API requires Chrome/Edge on desktop. Demo mode is enabled for testing.
                 <br />
-                <strong>To use hardware connection:</strong> Deploy your app first, then access it directly.
+                <strong>To use real hardware:</strong> Deploy your app first, then access it directly.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <Button 
-                onClick={() => setDemoMode(!demoMode)} 
-                variant={demoMode ? "default" : "secondary"}
-                className="w-full"
-              >
-                {demoMode ? '✓ Demo Mode Active' : 'Enable Demo Mode'}
-              </Button>
-              <p className="text-xs text-muted-foreground">
-                Demo mode simulates 6 channels at 250 Hz for testing visualization
-              </p>
+              <div className="p-4 bg-muted/20 rounded-lg">
+                <p className="text-sm">
+                  <strong>✓ Demo Mode Active</strong>
+                  <br />
+                  Simulating 6 channels at 250 Hz for testing visualization.
+                </p>
+              </div>
             </CardContent>
+          </Card>
+        )}
+
+        {demoMode && isSupported() && (
+          <Card className="mb-6 border-yellow-500/50 bg-yellow-500/5">
+            <CardHeader>
+              <CardTitle>Demo Mode</CardTitle>
+              <CardDescription>
+                Showing simulated EEG data. Connect a real device to see actual signals.
+              </CardDescription>
+            </CardHeader>
           </Card>
         )}
 
