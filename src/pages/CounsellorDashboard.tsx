@@ -5,7 +5,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Users, MessageCircle, AlertCircle, CheckCircle, X } from "lucide-react";
+import { Users, MessageCircle, AlertCircle, CheckCircle, X, Activity, TrendingUp, Calendar, User } from "lucide-react";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Textarea } from "@/components/ui/textarea";
 
 interface ConnectionRequest {
   id: string;
@@ -18,15 +21,47 @@ interface ConnectionRequest {
   };
 }
 
+interface StudentProfile {
+  id: string;
+  name: string;
+  created_at: string;
+}
+
+interface CheckIn {
+  id: string;
+  mood: number;
+  stress: number;
+  sleep_hours: number;
+  check_date: string;
+  notes?: string;
+}
+
+interface Message {
+  id: string;
+  message: string;
+  sender_id: string;
+  receiver_id: string;
+  created_at: string;
+  read: boolean;
+}
+
 export default function CounsellorDashboard() {
   const [requests, setRequests] = useState<ConnectionRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeCount, setActiveCount] = useState(0);
   const [pendingCount, setPendingCount] = useState(0);
+  const [connectedStudents, setConnectedStudents] = useState<StudentProfile[]>([]);
+  const [selectedStudent, setSelectedStudent] = useState<string | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [newMessage, setNewMessage] = useState("");
+  const [recentCheckIns, setRecentCheckIns] = useState<CheckIn[]>([]);
+  const [currentUserId, setCurrentUserId] = useState<string>("");
 
   useEffect(() => {
     loadRequests();
     loadStats();
+    loadConnectedStudents();
+    getCurrentUser();
 
     const channel = supabase
       .channel("connection_requests_counsellor")
@@ -40,14 +75,158 @@ export default function CounsellorDashboard() {
         () => {
           loadRequests();
           loadStats();
+          loadConnectedStudents();
+        }
+      )
+      .subscribe();
+
+    const messagesChannel = supabase
+      .channel("secure_messages_counsellor")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "secure_messages"
+        },
+        () => {
+          if (selectedStudent) {
+            loadMessages(selectedStudent);
+          }
         }
       )
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
+      supabase.removeChannel(messagesChannel);
     };
-  }, []);
+  }, [selectedStudent]);
+
+  const getCurrentUser = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) setCurrentUserId(user.id);
+  };
+
+  const loadConnectedStudents = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: connections } = await supabase
+        .from("connection_requests")
+        .select("student_id")
+        .eq("counsellor_id", user.id)
+        .eq("status", "accepted");
+
+      if (connections && connections.length > 0) {
+        const studentIds = connections.map(c => c.student_id);
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("id, name, created_at")
+          .in("id", studentIds);
+
+        setConnectedStudents(profiles || []);
+      }
+    } catch (error) {
+      console.error("Error loading connected students:", error);
+    }
+  };
+
+  const loadMessages = async (studentId: string) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data } = await supabase
+        .from("secure_messages")
+        .select("*")
+        .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
+        .or(`sender_id.eq.${studentId},receiver_id.eq.${studentId}`)
+        .order("created_at", { ascending: true });
+
+      setMessages(data || []);
+
+      // Mark messages as read
+      await supabase
+        .from("secure_messages")
+        .update({ read: true })
+        .eq("receiver_id", user.id)
+        .eq("sender_id", studentId);
+    } catch (error) {
+      console.error("Error loading messages:", error);
+    }
+  };
+
+  const sendMessage = async () => {
+    if (!newMessage.trim() || !selectedStudent) return;
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: connection } = await supabase
+        .from("connection_requests")
+        .select("id")
+        .eq("counsellor_id", user.id)
+        .eq("student_id", selectedStudent)
+        .eq("status", "accepted")
+        .single();
+
+      if (!connection) {
+        toast.error("Connection not found");
+        return;
+      }
+
+      const { error } = await supabase
+        .from("secure_messages")
+        .insert({
+          connection_request_id: connection.id,
+          sender_id: user.id,
+          receiver_id: selectedStudent,
+          message: newMessage
+        });
+
+      if (error) throw error;
+
+      setNewMessage("");
+      loadMessages(selectedStudent);
+      toast.success("Message sent");
+    } catch (error) {
+      console.error("Error sending message:", error);
+      toast.error("Failed to send message");
+    }
+  };
+
+  const loadRecentCheckIns = async () => {
+    if (!connectedStudents.length) return;
+
+    try {
+      const studentIds = connectedStudents.map(s => s.id);
+      const { data } = await supabase
+        .from("daily_check_ins")
+        .select("*")
+        .in("user_id", studentIds)
+        .order("check_date", { ascending: false })
+        .limit(10);
+
+      setRecentCheckIns(data || []);
+    } catch (error) {
+      console.error("Error loading check-ins:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (connectedStudents.length > 0) {
+      loadRecentCheckIns();
+    }
+  }, [connectedStudents]);
+
+  useEffect(() => {
+    if (selectedStudent) {
+      loadMessages(selectedStudent);
+    }
+  }, [selectedStudent]);
 
   const loadRequests = async () => {
     try {
@@ -192,21 +371,233 @@ export default function CounsellorDashboard() {
         </Card>
       </div>
 
-      <Tabs defaultValue="pending" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
+      <Tabs defaultValue="overview" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="overview">
+            <Activity className="h-4 w-4 mr-2" />
+            Overview
+          </TabsTrigger>
+          <TabsTrigger value="students">
+            <Users className="h-4 w-4 mr-2" />
+            Students ({connectedStudents.length})
+          </TabsTrigger>
+          <TabsTrigger value="messages">
+            <MessageCircle className="h-4 w-4 mr-2" />
+            Messages
+          </TabsTrigger>
           <TabsTrigger value="pending">
             <AlertCircle className="h-4 w-4 mr-2" />
-            Pending ({pendingCount})
+            Requests ({pendingCount})
           </TabsTrigger>
-          <TabsTrigger value="active">
-            <CheckCircle className="h-4 w-4 mr-2" />
-            Active ({activeCount})
-          </TabsTrigger>
-          <TabsTrigger value="declined">
-            <X className="h-4 w-4 mr-2" />
-            Declined ({declinedRequests.length})
+          <TabsTrigger value="activity">
+            <TrendingUp className="h-4 w-4 mr-2" />
+            Activity
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="overview" className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card className="p-6">
+              <h3 className="font-semibold text-lg mb-4">Connected Students</h3>
+              <ScrollArea className="h-64">
+                {connectedStudents.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No connected students yet</p>
+                ) : (
+                  <div className="space-y-3">
+                    {connectedStudents.map((student) => (
+                      <div key={student.id} className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted/50">
+                        <Avatar>
+                          <AvatarFallback>{student.name.charAt(0)}</AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1">
+                          <p className="font-medium">{student.name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            Connected {new Date(student.created_at).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <Button size="sm" variant="ghost" onClick={() => setSelectedStudent(student.id)}>
+                          <MessageCircle className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </ScrollArea>
+            </Card>
+
+            <Card className="p-6">
+              <h3 className="font-semibold text-lg mb-4">Recent Activity</h3>
+              <ScrollArea className="h-64">
+                {recentCheckIns.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No recent check-ins</p>
+                ) : (
+                  <div className="space-y-3">
+                    {recentCheckIns.map((checkIn) => {
+                      const student = connectedStudents.find(s => s.id === checkIn.id);
+                      return (
+                        <div key={checkIn.id} className="p-3 rounded-lg bg-muted/50">
+                          <div className="flex items-center justify-between mb-2">
+                            <p className="text-sm font-medium">{student?.name || "Student"}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {new Date(checkIn.check_date).toLocaleDateString()}
+                            </p>
+                          </div>
+                          <div className="grid grid-cols-3 gap-2 text-xs">
+                            <div>
+                              <span className="text-muted-foreground">Mood:</span> {checkIn.mood}/10
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">Stress:</span> {checkIn.stress}/10
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">Sleep:</span> {checkIn.sleep_hours}h
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </ScrollArea>
+            </Card>
+          </div>
+
+          <Card className="p-6">
+            <h3 className="font-semibold text-lg mb-4">Quick Actions</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Button variant="outline" className="h-24 flex flex-col gap-2">
+                <Calendar className="h-6 w-6" />
+                <span>Schedule Session</span>
+              </Button>
+              <Button variant="outline" className="h-24 flex flex-col gap-2">
+                <User className="h-6 w-6" />
+                <span>Update Profile</span>
+              </Button>
+              <Button variant="outline" className="h-24 flex flex-col gap-2">
+                <Activity className="h-6 w-6" />
+                <span>View Analytics</span>
+              </Button>
+            </div>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="students" className="space-y-4">
+          {connectedStudents.length === 0 ? (
+            <Card className="p-12 text-center">
+              <p className="text-muted-foreground">No connected students yet</p>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {connectedStudents.map((student) => (
+                <Card key={student.id} className="p-6">
+                  <div className="flex items-start gap-4">
+                    <Avatar className="h-12 w-12">
+                      <AvatarFallback className="text-lg">{student.name.charAt(0)}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-lg">{student.name}</h3>
+                      <p className="text-sm text-muted-foreground mb-3">
+                        Connected since {new Date(student.created_at).toLocaleDateString()}
+                      </p>
+                      <div className="flex gap-2">
+                        <Button size="sm" onClick={() => setSelectedStudent(student.id)}>
+                          <MessageCircle className="h-4 w-4 mr-2" />
+                          Message
+                        </Button>
+                        <Button size="sm" variant="outline">
+                          View Progress
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="messages" className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Card className="p-4">
+              <h3 className="font-semibold mb-4">Conversations</h3>
+              <ScrollArea className="h-96">
+                {connectedStudents.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No students connected</p>
+                ) : (
+                  <div className="space-y-2">
+                    {connectedStudents.map((student) => (
+                      <Button
+                        key={student.id}
+                        variant={selectedStudent === student.id ? "secondary" : "ghost"}
+                        className="w-full justify-start"
+                        onClick={() => setSelectedStudent(student.id)}
+                      >
+                        <Avatar className="h-8 w-8 mr-2">
+                          <AvatarFallback>{student.name.charAt(0)}</AvatarFallback>
+                        </Avatar>
+                        {student.name}
+                      </Button>
+                    ))}
+                  </div>
+                )}
+              </ScrollArea>
+            </Card>
+
+            <Card className="md:col-span-2 p-4">
+              {selectedStudent ? (
+                <>
+                  <div className="border-b pb-3 mb-4">
+                    <h3 className="font-semibold">
+                      {connectedStudents.find(s => s.id === selectedStudent)?.name}
+                    </h3>
+                  </div>
+                  <ScrollArea className="h-80 mb-4 pr-4">
+                    <div className="space-y-3">
+                      {messages.map((msg) => (
+                        <div
+                          key={msg.id}
+                          className={`flex ${msg.sender_id === currentUserId ? "justify-end" : "justify-start"}`}
+                        >
+                          <div
+                            className={`max-w-[70%] rounded-lg p-3 ${
+                              msg.sender_id === currentUserId
+                                ? "bg-primary text-primary-foreground"
+                                : "bg-muted"
+                            }`}
+                          >
+                            <p className="text-sm">{msg.message}</p>
+                            <p className="text-xs opacity-70 mt-1">
+                              {new Date(msg.created_at).toLocaleTimeString()}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                  <div className="flex gap-2">
+                    <Textarea
+                      placeholder="Type your message..."
+                      value={newMessage}
+                      onChange={(e) => setNewMessage(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && !e.shiftKey) {
+                          e.preventDefault();
+                          sendMessage();
+                        }
+                      }}
+                      className="min-h-[60px]"
+                    />
+                    <Button onClick={sendMessage}>Send</Button>
+                  </div>
+                </>
+              ) : (
+                <div className="h-full flex items-center justify-center text-muted-foreground">
+                  Select a student to start messaging
+                </div>
+              )}
+            </Card>
+          </div>
+        </TabsContent>
 
         <TabsContent value="pending" className="space-y-4">
           {pendingRequests.length === 0 ? (
@@ -283,6 +674,57 @@ export default function CounsellorDashboard() {
               </Card>
             ))
           )}
+        </TabsContent>
+
+        <TabsContent value="activity" className="space-y-4">
+          <Card className="p-6">
+            <h3 className="font-semibold text-lg mb-4">Student Wellbeing Trends</h3>
+            {recentCheckIns.length === 0 ? (
+              <p className="text-muted-foreground">No check-in data available</p>
+            ) : (
+              <div className="space-y-4">
+                {recentCheckIns.map((checkIn) => {
+                  const student = connectedStudents.find(s => s.id === checkIn.id);
+                  return (
+                    <div key={checkIn.id} className="p-4 rounded-lg border">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                          <Avatar>
+                            <AvatarFallback>{student?.name.charAt(0) || "?"}</AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <p className="font-medium">{student?.name || "Student"}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {new Date(checkIn.check_date).toLocaleDateString()}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-3 gap-4">
+                        <div className="text-center p-3 rounded bg-muted/50">
+                          <p className="text-xs text-muted-foreground mb-1">Mood</p>
+                          <p className="text-2xl font-bold">{checkIn.mood}/10</p>
+                        </div>
+                        <div className="text-center p-3 rounded bg-muted/50">
+                          <p className="text-xs text-muted-foreground mb-1">Stress</p>
+                          <p className="text-2xl font-bold">{checkIn.stress}/10</p>
+                        </div>
+                        <div className="text-center p-3 rounded bg-muted/50">
+                          <p className="text-xs text-muted-foreground mb-1">Sleep</p>
+                          <p className="text-2xl font-bold">{checkIn.sleep_hours}h</p>
+                        </div>
+                      </div>
+                      {checkIn.notes && (
+                        <div className="mt-3 p-3 rounded bg-muted/30">
+                          <p className="text-sm">{checkIn.notes}</p>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </Card>
         </TabsContent>
 
         <TabsContent value="declined" className="space-y-4">
