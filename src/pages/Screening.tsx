@@ -1,10 +1,10 @@
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Brain, Target, Clock, Eye, GamepadIcon, Pencil, HandMetal } from 'lucide-react';
+import { ArrowLeft, Brain, Target, Clock, Eye, GamepadIcon, Pencil, HandMetal, Heart, Activity, Lightbulb, Wine } from 'lucide-react';
 
 export default function Screening() {
-  const screeningTests = [
+  const cognitiveTests = [
     {
       id: 'spiral',
       title: 'Spiral Drawing Test',
@@ -12,7 +12,8 @@ export default function Screening() {
       icon: Pencil,
       path: '/screening/spiral',
       color: 'text-primary',
-      difficulty: 'Easy'
+      difficulty: 'Easy',
+      category: 'Cognitive'
     },
     {
       id: 'finger-tap',
@@ -21,7 +22,8 @@ export default function Screening() {
       icon: HandMetal,
       path: '/screening/finger-tap',
       color: 'text-cyan-400',
-      difficulty: 'Easy'
+      difficulty: 'Easy',
+      category: 'Cognitive'
     },
     {
       id: 'memory',
@@ -30,7 +32,8 @@ export default function Screening() {
       icon: Brain,
       path: '/screening/memory',
       color: 'text-success',
-      difficulty: 'Medium'
+      difficulty: 'Medium',
+      category: 'Cognitive'
     },
     {
       id: 'stroop',
@@ -39,7 +42,8 @@ export default function Screening() {
       icon: Eye,
       path: '/screening/stroop',
       color: 'text-primary',
-      difficulty: 'Medium'
+      difficulty: 'Medium',
+      category: 'Cognitive'
     },
     {
       id: 'trail-making',
@@ -48,7 +52,8 @@ export default function Screening() {
       icon: Target,
       path: '/screening/trail-making',
       color: 'text-cyan-400',
-      difficulty: 'Hard'
+      difficulty: 'Hard',
+      category: 'Cognitive'
     },
     {
       id: 'dino',
@@ -57,7 +62,51 @@ export default function Screening() {
       icon: GamepadIcon,
       path: '/screening/dino',
       color: 'text-success',
-      difficulty: 'Fun'
+      difficulty: 'Fun',
+      category: 'Cognitive'
+    }
+  ];
+
+  const clinicalTests = [
+    {
+      id: 'phq9',
+      title: 'PHQ-9',
+      description: 'Depression screening questionnaire',
+      icon: Heart,
+      path: '/screening/phq9',
+      color: 'text-primary',
+      difficulty: '9 Questions',
+      category: 'Clinical'
+    },
+    {
+      id: 'gad7',
+      title: 'GAD-7',
+      description: 'Generalized anxiety disorder assessment',
+      icon: Activity,
+      path: '/screening/gad7',
+      color: 'text-cyan-400',
+      difficulty: '7 Questions',
+      category: 'Clinical'
+    },
+    {
+      id: 'pss',
+      title: 'Perceived Stress Scale',
+      description: 'Measure stress levels over the past month',
+      icon: Lightbulb,
+      path: '/screening/pss',
+      color: 'text-success',
+      difficulty: '10 Questions',
+      category: 'Clinical'
+    },
+    {
+      id: 'audit',
+      title: 'AUDIT',
+      description: 'Alcohol use disorders identification test',
+      icon: Wine,
+      path: '/screening/audit',
+      color: 'text-primary',
+      difficulty: '10 Questions',
+      category: 'Clinical'
     }
   ];
 
@@ -74,46 +123,86 @@ export default function Screening() {
         <div className="text-center mb-12">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
             <span className="bg-gradient-to-r from-primary via-cyan-400 to-primary bg-clip-text text-transparent">
-              Neurological Screening
+              Comprehensive Screening Tools
             </span>
           </h1>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            Evidence-based cognitive and motor assessments for early detection of neurological conditions
+            Evidence-based cognitive, motor, and clinical assessments for neurological and mental health screening
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          {screeningTests.map((test) => {
-            const Icon = test.icon;
-            return (
-              <Link key={test.id} to={test.path}>
-                <Card className="h-full shadow-card hover:shadow-gentle transition-all duration-300 hover:-translate-y-1 cursor-pointer group">
-                  <CardHeader>
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="p-3 rounded-xl bg-primary/10">
-                        <Icon className={`h-8 w-8 ${test.color} group-hover:scale-110 transition-transform`} />
+        <div className="mb-12">
+          <h2 className="text-2xl font-bold mb-6">Cognitive & Motor Assessments</h2>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {cognitiveTests.map((test) => {
+              const Icon = test.icon;
+              return (
+                <Link key={test.id} to={test.path}>
+                  <Card className="h-full shadow-card hover:shadow-gentle transition-all duration-300 hover:-translate-y-1 cursor-pointer group">
+                    <CardHeader>
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="p-3 rounded-xl bg-primary/10">
+                          <Icon className={`h-8 w-8 ${test.color} group-hover:scale-110 transition-transform`} />
+                        </div>
+                        <span className="text-xs px-2 py-1 rounded-full bg-accent/20 text-accent">
+                          {test.difficulty}
+                        </span>
                       </div>
-                      <span className="text-xs px-2 py-1 rounded-full bg-accent/20 text-accent">
-                        {test.difficulty}
-                      </span>
-                    </div>
-                    <CardTitle className="text-xl group-hover:text-primary transition-colors">
-                      {test.title}
-                    </CardTitle>
-                    <CardDescription className="text-sm">
-                      {test.description}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <Button variant="ghost" className="w-full justify-start" size="sm">
-                      <Clock className="mr-2 h-4 w-4" />
-                      Start Test
-                    </Button>
-                  </CardContent>
-                </Card>
-              </Link>
-            );
-          })}
+                      <CardTitle className="text-xl group-hover:text-primary transition-colors">
+                        {test.title}
+                      </CardTitle>
+                      <CardDescription className="text-sm">
+                        {test.description}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <Button variant="ghost" className="w-full justify-start" size="sm">
+                        <Clock className="mr-2 h-4 w-4" />
+                        Start Test
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold mb-6">Clinical Screening Questionnaires</h2>
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {clinicalTests.map((test) => {
+              const Icon = test.icon;
+              return (
+                <Link key={test.id} to={test.path}>
+                  <Card className="h-full shadow-card hover:shadow-gentle transition-all duration-300 hover:-translate-y-1 cursor-pointer group">
+                    <CardHeader>
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="p-3 rounded-xl bg-primary/10">
+                          <Icon className={`h-8 w-8 ${test.color} group-hover:scale-110 transition-transform`} />
+                        </div>
+                        <span className="text-xs px-2 py-1 rounded-full bg-accent/20 text-accent">
+                          {test.difficulty}
+                        </span>
+                      </div>
+                      <CardTitle className="text-xl group-hover:text-primary transition-colors">
+                        {test.title}
+                      </CardTitle>
+                      <CardDescription className="text-sm">
+                        {test.description}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <Button variant="ghost" className="w-full justify-start" size="sm">
+                        <Clock className="mr-2 h-4 w-4" />
+                        Start Test
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </Link>
+              );
+            })}
+          </div>
         </div>
 
         <Card className="bg-muted/30 border-primary/20">

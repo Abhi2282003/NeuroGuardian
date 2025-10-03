@@ -15,6 +15,10 @@ import MemoryTest from "./pages/screening/MemoryTest";
 import StroopTest from "./pages/screening/StroopTest";
 import TrailMaking from "./pages/screening/TrailMaking";
 import DinoGame from "./pages/screening/DinoGame";
+import PHQ9 from "./pages/screening/PHQ9";
+import GAD7 from "./pages/screening/GAD7";
+import PSS from "./pages/screening/PSS";
+import AUDIT from "./pages/screening/AUDIT";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import NotFound from "./pages/NotFound";
 
@@ -99,6 +103,38 @@ const App = () => (
           element={
             <ProtectedRoute>
               <DinoGame />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/screening/phq9" 
+          element={
+            <ProtectedRoute>
+              <PHQ9 />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/screening/gad7" 
+          element={
+            <ProtectedRoute>
+              <GAD7 />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/screening/pss" 
+          element={
+            <ProtectedRoute>
+              <PSS />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/screening/audit" 
+          element={
+            <ProtectedRoute>
+              <AUDIT />
             </ProtectedRoute>
           } 
         />
