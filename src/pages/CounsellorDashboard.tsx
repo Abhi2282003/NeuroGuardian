@@ -136,7 +136,8 @@ export default function CounsellorDashboard() {
         .from("connection_requests")
         .select("student_id")
         .eq("counsellor_id", user.id)
-        .eq("status", "accepted");
+        .eq("status", "accepted")
+        .is("disconnected_at", null);
 
       if (connections && connections.length > 0) {
         const studentIds = connections.map(c => c.student_id);

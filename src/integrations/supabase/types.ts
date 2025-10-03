@@ -96,11 +96,54 @@ export type Database = {
           },
         ]
       }
+      chat_sessions: {
+        Row: {
+          connection_request_id: string
+          counsellor_id: string
+          created_at: string
+          duration_minutes: number | null
+          ended_at: string | null
+          id: string
+          started_at: string
+          student_id: string
+        }
+        Insert: {
+          connection_request_id: string
+          counsellor_id: string
+          created_at?: string
+          duration_minutes?: number | null
+          ended_at?: string | null
+          id?: string
+          started_at?: string
+          student_id: string
+        }
+        Update: {
+          connection_request_id?: string
+          counsellor_id?: string
+          created_at?: string
+          duration_minutes?: number | null
+          ended_at?: string | null
+          id?: string
+          started_at?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_sessions_connection_request_id_fkey"
+            columns: ["connection_request_id"]
+            isOneToOne: false
+            referencedRelation: "connection_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       connection_requests: {
         Row: {
           alert_id: string | null
           counsellor_id: string
           created_at: string
+          disconnected_at: string | null
+          disconnected_by: string | null
           id: string
           message: string
           responded_at: string | null
@@ -111,6 +154,8 @@ export type Database = {
           alert_id?: string | null
           counsellor_id: string
           created_at?: string
+          disconnected_at?: string | null
+          disconnected_by?: string | null
           id?: string
           message: string
           responded_at?: string | null
@@ -121,6 +166,8 @@ export type Database = {
           alert_id?: string | null
           counsellor_id?: string
           created_at?: string
+          disconnected_at?: string | null
+          disconnected_by?: string | null
           id?: string
           message?: string
           responded_at?: string | null
@@ -255,6 +302,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          chat_credits_minutes: number | null
           condition: Database["public"]["Enums"]["condition_type"] | null
           created_at: string | null
           id: string
@@ -265,6 +313,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          chat_credits_minutes?: number | null
           condition?: Database["public"]["Enums"]["condition_type"] | null
           created_at?: string | null
           id: string
@@ -275,6 +324,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          chat_credits_minutes?: number | null
           condition?: Database["public"]["Enums"]["condition_type"] | null
           created_at?: string | null
           id?: string
