@@ -12,13 +12,23 @@ export default function EEGChart({ data, channelNames, colors, isStreaming }: EE
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const plotRef = useRef<WebglPlot | null>(null);
   const linesRef = useRef<WebglLine[]>([]);
-  const offsetRef = useRef(0);
+  const dataRef = useRef<number[][]>(data);
+  const isStreamingRef = useRef<boolean>(isStreaming);
 
   const defaultColors = [
     '#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#F7DC6F'
   ];
 
   const defaultChannelNames = Array.from({ length: 6 }, (_, i) => `Channel ${i + 1}`);
+
+  // Update refs when props change
+  useEffect(() => {
+    dataRef.current = data;
+  }, [data]);
+
+  useEffect(() => {
+    isStreamingRef.current = isStreaming;
+  }, [isStreaming]);
 
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -56,14 +66,14 @@ export default function EEGChart({ data, channelNames, colors, isStreaming }: EE
     // Animation loop
     let animationId: number;
     const animate = () => {
-      if (!isStreaming) {
+      if (!isStreamingRef.current) {
         animationId = requestAnimationFrame(animate);
         return;
       }
 
       // Update each channel
       linesRef.current.forEach((line, channelIdx) => {
-        const channelData = data[channelIdx];
+        const channelData = dataRef.current[channelIdx];
         if (!channelData || channelData.length === 0) return;
 
         // Normalize and scale data for display
@@ -85,7 +95,9 @@ export default function EEGChart({ data, channelNames, colors, isStreaming }: EE
         }
       });
 
-      wglp.update();
+      if (plotRef.current) {
+        plotRef.current.update();
+      }
       animationId = requestAnimationFrame(animate);
     };
 
@@ -97,7 +109,7 @@ export default function EEGChart({ data, channelNames, colors, isStreaming }: EE
       linesRef.current = [];
       plotRef.current = null;
     };
-  }, [data.length, isStreaming]);
+  }, [data.length]);
 
   return (
     <div className="relative w-full h-full">

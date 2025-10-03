@@ -101,7 +101,9 @@ export default function BioAmp({ onBack }: BioAmpProps) {
 
   const handleStartStream = async () => {
     try {
+      console.log('BioAmp: Starting stream...');
       await startStream((packet) => {
+        console.log('BioAmp: Received packet:', packet);
         if (isPaused) return;
         
         // Update channels with real data
@@ -125,7 +127,9 @@ export default function BioAmp({ onBack }: BioAmpProps) {
           return newChannels;
         });
       });
+      console.log('BioAmp: Stream started successfully');
     } catch (error) {
+      console.error('BioAmp: Stream error:', error);
       toast({
         title: 'Stream Error',
         description: error instanceof Error ? error.message : 'Failed to start stream',
