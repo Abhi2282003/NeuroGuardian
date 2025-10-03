@@ -66,7 +66,7 @@ export default function Dashboard() {
     },
     {
       title: 'Screening Tests',
-      description: 'Neurological assessments',
+      description: 'Mental health assessments',
       icon: Brain,
       path: '/screening',
       color: 'text-primary'
@@ -77,6 +77,13 @@ export default function Dashboard() {
       icon: Brain,
       path: '/wellness',
       color: 'text-success'
+    },
+    {
+      title: 'Mind Games',
+      description: 'Fun brain training activities',
+      icon: Play,
+      path: '/games',
+      color: 'text-purple-500'
     }
   ];
 
@@ -94,8 +101,9 @@ export default function Dashboard() {
       { title: 'Patient Registry', icon: Users, path: '/patients' }
     ],
     patient: [
-      { title: 'My Progress', icon: FileText, path: '/progress' },
-      { title: 'My Results', icon: Brain, path: '/results' }
+      { title: 'My Progress', icon: FileText, path: '/student?tab=progress' },
+      { title: 'My Results', icon: Brain, path: '/screening' },
+      { title: 'Consult Counsellor', icon: Users, path: '/student?tab=requests' }
     ]
   };
 
@@ -151,7 +159,7 @@ export default function Dashboard() {
         )}
 
         {/* Main Activities */}
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {activities.map((activity, index) => {
             const Icon = activity.icon;
             return (

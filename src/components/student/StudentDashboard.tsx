@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -12,6 +13,10 @@ import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
 export function StudentDashboard() {
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const tabParam = searchParams.get('tab');
+  const [defaultTab, setDefaultTab] = useState(tabParam || 'checkin');
   const [hasCheckedInToday, setHasCheckedInToday] = useState(false);
   const [pendingRequests, setPendingRequests] = useState(0);
   const [activeConnections, setActiveConnections] = useState(0);
@@ -20,7 +25,13 @@ export function StudentDashboard() {
   useEffect(() => {
     checkTodayCheckIn();
     loadConnectionData();
-  }, []);
+    
+    // Update tab when URL changes
+    const tabParam = new URLSearchParams(location.search).get('tab');
+    if (tabParam) {
+      setDefaultTab(tabParam);
+    }
+  }, [location.search]);
 
   const checkTodayCheckIn = async () => {
     try {
@@ -162,7 +173,7 @@ export function StudentDashboard() {
       </div>
 
       {/* Main Content Tabs */}
-      <Tabs defaultValue={hasCheckedInToday ? "progress" : "checkin"} className="space-y-6">
+      <Tabs value={defaultTab} onValueChange={setDefaultTab} className="space-y-6">
         <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="checkin">
             <Heart className="h-4 w-4 mr-2" />
