@@ -19,7 +19,7 @@ interface BioAmpProps {
 export default function BioAmp({ onBack }: BioAmpProps) {
   const { status, isSupported, connect, disconnect, startStream, stopStream } = useSerialClient();
   const { toast } = useToast();
-  const [demoMode, setDemoMode] = useState(false); // Demo disabled by default
+  const [demoMode, setDemoMode] = useState(true); // Enable demo for preview testing
   const [channels, setChannels] = useState<number[][]>([[], [], [], [], [], []]);
   const [isPaused, setIsPaused] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
@@ -86,6 +86,7 @@ export default function BioAmp({ onBack }: BioAmpProps) {
   const handleConnect = async () => {
     try {
       console.log('Attempting to connect...');
+      setDemoMode(false); // Disable demo when connecting real device
       await connect();
       console.log('Connected successfully, status:', status);
       toast({
