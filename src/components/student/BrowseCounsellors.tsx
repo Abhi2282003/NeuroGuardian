@@ -5,7 +5,18 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { UserCircle, Building2, Send, CheckCircle } from "lucide-react";
+import { UserCircle, Building2, Send, CheckCircle, UserMinus } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface Counsellor {
   id: string;
@@ -57,7 +68,8 @@ export function BrowseCounsellors() {
       const { data, error } = await supabase
         .from("connection_requests")
         .select("counsellor_id, status")
-        .eq("student_id", user.id);
+        .eq("student_id", user.id)
+        .is("disconnected_at", null);
 
       if (error) throw error;
 
@@ -102,6 +114,31 @@ export function BrowseCounsellors() {
       toast.error(error.message || "Failed to send request");
     } finally {
       setSending(false);
+    }
+  };
+
+  const handleDisconnect = async (counsellorId: string) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { error } = await supabase
+        .from("connection_requests")
+        .update({ 
+          disconnected_at: new Date().toISOString(),
+          disconnected_by: user.id
+        })
+        .eq("student_id", user.id)
+        .eq("counsellor_id", counsellorId)
+        .eq("status", "accepted");
+
+      if (error) throw error;
+
+      toast.success("Disconnected from counsellor");
+      loadRequestStatus();
+    } catch (error) {
+      console.error("Error disconnecting:", error);
+      toast.error("Failed to disconnect");
     }
   };
 
@@ -178,10 +215,28 @@ export function BrowseCounsellors() {
                 ) : (
                   <div>
                     {status === "accepted" ? (
-                      <Button disabled className="w-full">
-                        <CheckCircle className="h-4 w-4 mr-2" />
-                        Connected
-                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="outline" className="w-full">
+                            <UserMinus className="h-4 w-4 mr-2" />
+                            Disconnect
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Disconnect from counsellor?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This will permanently end your connection with {counsellor.name}. You can always connect with a new counsellor later.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => handleDisconnect(counsellor.id)}>
+                              Disconnect
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     ) : status === "pending" ? (
                       <Button disabled variant="outline" className="w-full">
                         Request Pending

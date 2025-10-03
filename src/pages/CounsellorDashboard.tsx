@@ -94,26 +94,55 @@ export default function CounsellorDashboard() {
       )
       .subscribe();
 
-    const messagesChannel = supabase
-      .channel("secure_messages_counsellor")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "secure_messages"
-        },
-        () => {
-          if (selectedStudent) {
-            loadMessages(selectedStudent);
-          }
-        }
-      )
-      .subscribe();
-
     return () => {
       supabase.removeChannel(channel);
-      supabase.removeChannel(messagesChannel);
+    };
+  }, []);
+
+  // Separate effect for messages subscription
+  useEffect(() => {
+    if (!selectedStudent) return;
+
+    const getConnectionAndSubscribe = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: connection } = await supabase
+        .from("connection_requests")
+        .select("id")
+        .eq("counsellor_id", user.id)
+        .eq("student_id", selectedStudent)
+        .eq("status", "accepted")
+        .is("disconnected_at", null)
+        .maybeSingle();
+
+      if (!connection) return;
+
+      const messagesChannel = supabase
+        .channel(`messages_${connection.id}`)
+        .on(
+          "postgres_changes",
+          {
+            event: "INSERT",
+            schema: "public",
+            table: "secure_messages",
+            filter: `connection_request_id=eq.${connection.id}`,
+          },
+          (payload) => {
+            setMessages((prev) => [...prev, payload.new as Message]);
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(messagesChannel);
+      };
+    };
+
+    const cleanup = getConnectionAndSubscribe();
+
+    return () => {
+      cleanup.then(cleanupFn => cleanupFn?.());
     };
   }, [selectedStudent]);
 
