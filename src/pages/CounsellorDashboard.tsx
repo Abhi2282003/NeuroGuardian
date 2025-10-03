@@ -714,26 +714,30 @@ export default function CounsellorDashboard() {
                     </h3>
                   </div>
                   <ScrollArea className="h-80 mb-4 pr-4">
-                     <div className="space-y-3">
-                      {messages.map((msg) => (
-                        <div
-                          key={msg.id}
-                          className={`flex ${msg.sender_id === currentUserId ? "justify-end" : "justify-start"}`}
-                        >
+                     <div className="space-y-3 p-2">
+                      {messages.map((msg) => {
+                        const isSender = msg.sender_id === currentUserId;
+                        console.log("Message:", msg.id, "Sender:", msg.sender_id, "CurrentUser:", currentUserId, "IsSender:", isSender);
+                        return (
                           <div
-                            className={`max-w-[70%] rounded-lg p-3 ${
-                              msg.sender_id === currentUserId
-                                ? "bg-primary text-primary-foreground"
-                                : "bg-muted"
-                            }`}
+                            key={msg.id}
+                            className={`flex ${isSender ? "justify-end" : "justify-start"}`}
                           >
-                            <p className="text-sm">{msg.message}</p>
-                            <p className="text-xs opacity-70 mt-1">
-                              {new Date(msg.created_at).toLocaleTimeString()}
-                            </p>
+                            <div
+                              className={`max-w-[70%] rounded-lg p-3 ${
+                                isSender
+                                  ? "bg-primary text-primary-foreground ml-auto"
+                                  : "bg-secondary text-secondary-foreground mr-auto"
+                              }`}
+                            >
+                              <p className="text-sm break-words">{msg.message}</p>
+                              <p className="text-xs opacity-70 mt-1">
+                                {new Date(msg.created_at).toLocaleTimeString()}
+                              </p>
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                       <div ref={messagesEndRef} />
                     </div>
                   </ScrollArea>

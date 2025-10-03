@@ -333,28 +333,30 @@ export function SecureChat() {
             </div>
 
             <ScrollArea className="flex-1 pr-4">
-              <div className="space-y-4">
-                {messages.map((message) => (
-                  <div
-                    key={message.id}
-                    className={`flex ${
-                      message.sender_id === userId ? "justify-end" : "justify-start"
-                    }`}
-                  >
+              <div className="space-y-4 p-2">
+                {messages.map((message) => {
+                  const isSender = message.sender_id === userId;
+                  console.log("Message:", message.id, "Sender:", message.sender_id, "CurrentUser:", userId, "IsSender:", isSender);
+                  return (
                     <div
-                      className={`max-w-[70%] rounded-lg p-3 ${
-                        message.sender_id === userId
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-muted"
-                      }`}
+                      key={message.id}
+                      className={`flex ${isSender ? "justify-end" : "justify-start"}`}
                     >
-                      <p className="text-sm">{message.message}</p>
-                      <p className="text-xs opacity-70 mt-1">
-                        {formatDistanceToNow(new Date(message.created_at), { addSuffix: true })}
-                      </p>
+                      <div
+                        className={`max-w-[70%] rounded-lg p-3 ${
+                          isSender
+                            ? "bg-primary text-primary-foreground ml-auto"
+                            : "bg-secondary text-secondary-foreground mr-auto"
+                        }`}
+                      >
+                        <p className="text-sm break-words">{message.message}</p>
+                        <p className="text-xs opacity-70 mt-1">
+                          {formatDistanceToNow(new Date(message.created_at), { addSuffix: true })}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
                 <div ref={scrollRef} />
               </div>
             </ScrollArea>
