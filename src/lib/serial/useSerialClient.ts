@@ -89,7 +89,6 @@ export function useSerialClient() {
       throw new Error('Port not readable');
     }
 
-    console.log('Starting stream...');
     await sendCommand('START');
     
     streamingRef.current = true;
@@ -100,7 +99,6 @@ export function useSerialClient() {
     
     workerRef.current.onmessage = (e) => {
       if (e.data.type === 'packets') {
-        console.log('Received packets:', e.data.packets.length);
         e.data.packets.forEach((packet: ParsedPacket) => {
           onData(packet);
         });
@@ -121,15 +119,9 @@ export function useSerialClient() {
     
     (async () => {
       try {
-        console.log('Starting read loop...');
         while (streamingRef.current && readerRef.current) {
           const { value, done } = await readerRef.current.read();
-          if (done) {
-            console.log('Stream done');
-            break;
-          }
-          
-          console.log('Received data chunk:', value.length, 'bytes');
+          if (done) break;
           
           // Send to worker for parsing
           if (workerRef.current) {
@@ -143,7 +135,6 @@ export function useSerialClient() {
   }, [sendCommand]);
 
   const stopStream = useCallback(async () => {
-    console.log('Stopping stream...');
     streamingRef.current = false;
     
     await sendCommand('STOP');

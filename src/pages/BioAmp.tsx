@@ -19,7 +19,6 @@ interface BioAmpProps {
 export default function BioAmp({ onBack }: BioAmpProps) {
   const { status, isSupported, connect, disconnect, startStream, stopStream } = useSerialClient();
   const { toast } = useToast();
-  const [demoMode, setDemoMode] = useState(true); // Enable demo for preview testing
   const [channels, setChannels] = useState<number[][]>([[], [], [], [], [], []]);
   const [isPaused, setIsPaused] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
@@ -35,34 +34,6 @@ export default function BioAmp({ onBack }: BioAmpProps) {
   const filtersRef = useRef<SignalFilter[]>(Array(6).fill(null).map(() => new SignalFilter(250)));
   const recordingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Demo mode data generation
-  useEffect(() => {
-    if (demoMode && !isPaused) {
-      const interval = setInterval(() => {
-        setChannels(prev => {
-          const newChannels = prev.map((channel, idx) => {
-            if (!selectedChannels[idx]) return channel;
-            
-            const newValue = Math.sin(Date.now() / 1000 + idx) * 1000 + 8192 + (Math.random() * 200 - 100);
-            const filtered = filtersRef.current[idx].process(newValue);
-            const updated = [...channel.slice(-500), filtered];
-            
-            // Record if recording is active
-            if (isRecording && idx === 0) {
-              recordedDataRef.current.push({
-                timestamp: Date.now(),
-                channels: newChannels.map(ch => ch[ch.length - 1] || 0)
-              });
-            }
-            
-            return updated;
-          });
-          return newChannels;
-        });
-      }, 4); // ~250 Hz
-      return () => clearInterval(interval);
-    }
-  }, [demoMode, isPaused, isRecording, selectedChannels]);
 
   // Recording timer
   useEffect(() => {
@@ -85,10 +56,7 @@ export default function BioAmp({ onBack }: BioAmpProps) {
 
   const handleConnect = async () => {
     try {
-      console.log('Attempting to connect...');
-      setDemoMode(false); // Disable demo when connecting real device
       await connect();
-      console.log('Connected successfully, status:', status);
       toast({
         title: 'Connected',
         description: 'BioAmp device connected successfully. Click "Start Stream" to begin.'
@@ -105,22 +73,17 @@ export default function BioAmp({ onBack }: BioAmpProps) {
 
   const handleStartStream = async () => {
     try {
-      console.log('BioAmp: Starting stream...');
       await startStream((packet) => {
-        console.log('BioAmp: Received packet in callback:', packet);
         if (isPaused) return;
         
         // Update channels with real data
         setChannels(prev => {
-          console.log('BioAmp: Updating channels state, previous length:', prev[0]?.length);
           const newChannels = prev.map((channel, idx) => {
             if (!selectedChannels[idx]) return channel;
             
             const newValue = packet.channels[idx] || 8192;
             const filtered = filtersRef.current[idx].process(newValue);
-            const updated = [...channel.slice(-500), filtered];
-            console.log(`BioAmp: Channel ${idx} updated, new length:`, updated.length, 'value:', filtered);
-            return updated;
+            return [...channel.slice(-500), filtered];
           });
           
           // Record if recording is active
@@ -134,9 +97,13 @@ export default function BioAmp({ onBack }: BioAmpProps) {
           return newChannels;
         });
       });
-      console.log('BioAmp: Stream started successfully');
+      
+      toast({
+        title: 'Stream Started',
+        description: 'Receiving data from BioAmp device'
+      });
     } catch (error) {
-      console.error('BioAmp: Stream error:', error);
+      console.error('Stream error:', error);
       toast({
         title: 'Stream Error',
         description: error instanceof Error ? error.message : 'Failed to start stream',
@@ -255,33 +222,13 @@ export default function BioAmp({ onBack }: BioAmpProps) {
         </div>
 
         {!isSupported() && (
-          <Card className="mb-6 border-primary/50 bg-primary/5">
+          <Card className="mb-6 border-destructive/50 bg-destructive/5">
             <CardHeader>
               <CardTitle>Web Serial Not Available</CardTitle>
               <CardDescription>
-                Web Serial API requires Chrome/Edge on desktop. Demo mode is enabled for testing.
+                Web Serial API requires Chrome/Edge browser on desktop.
                 <br />
-                <strong>To use real hardware:</strong> Deploy your app first, then access it directly.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="p-4 bg-muted/20 rounded-lg">
-                <p className="text-sm">
-                  <strong>✓ Demo Mode Active</strong>
-                  <br />
-                  Simulating 6 channels at 250 Hz for testing visualization.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {demoMode && isSupported() && (
-          <Card className="mb-6 border-yellow-500/50 bg-yellow-500/5">
-            <CardHeader>
-              <CardTitle>Demo Mode</CardTitle>
-              <CardDescription>
-                Showing simulated EEG data. Connect a real device to see actual signals.
+                Please use a compatible browser to connect your BioAmp device.
               </CardDescription>
             </CardHeader>
           </Card>
@@ -306,7 +253,7 @@ export default function BioAmp({ onBack }: BioAmpProps) {
                     onClick={() => setIsPaused(!isPaused)}
                     variant="outline"
                     size="sm"
-                    disabled={!status.streaming && !demoMode}
+                    disabled={!status.streaming}
                   >
                     {isPaused ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
                   </Button>
@@ -314,7 +261,7 @@ export default function BioAmp({ onBack }: BioAmpProps) {
                     onClick={captureSnapshot}
                     variant="outline"
                     size="sm"
-                    disabled={!status.streaming && !demoMode}
+                    disabled={!status.streaming}
                   >
                     <Camera className="h-4 w-4" />
                   </Button>
@@ -338,7 +285,7 @@ export default function BioAmp({ onBack }: BioAmpProps) {
                     onClick={toggleRecording}
                     variant={isRecording ? "destructive" : "outline"}
                     size="sm"
-                    disabled={!status.streaming && !demoMode}
+                    disabled={!status.streaming}
                   >
                     {isRecording ? `⏺ ${recordingTimer}s` : 'Record'}
                   </Button>
@@ -400,15 +347,11 @@ export default function BioAmp({ onBack }: BioAmpProps) {
             <div className="h-96 w-full">
               <EEGChart 
                 data={displayChannels.filter((_, idx) => selectedChannels[idx])}
-                isStreaming={(status.streaming || demoMode) && !isPaused && currentFrameIndex === -1}
+                isStreaming={status.streaming && !isPaused && currentFrameIndex === -1}
                 channelNames={selectedChannels
                   .map((selected, idx) => selected ? `Ch${idx + 1}` : null)
                   .filter(Boolean) as string[]}
               />
-              <div className="text-xs text-muted-foreground mt-2">
-                Debug: Channels={displayChannels.length}, DataPoints={displayChannels[0]?.length || 0}, 
-                Streaming={status.streaming.toString()}, Demo={demoMode.toString()}
-              </div>
             </div>
           </CardContent>
         </Card>
