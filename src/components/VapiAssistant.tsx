@@ -58,10 +58,10 @@ const VapiAssistant = () => {
   };
 
   useEffect(() => {
-    // Initialize Vapi
+    // Initialize Vapi with your public key
     const initVapi = async () => {
       try {
-        const vapi = new Vapi(import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY);
+        const vapi = new Vapi("8271e868-582a-477e-b473-d6cec5bb72e9");
         vapiRef.current = vapi;
 
         // Set up event listeners
@@ -132,33 +132,8 @@ const VapiAssistant = () => {
     if (!vapiRef.current) return;
 
     try {
-      await vapiRef.current.start({
-        transcriber: {
-          provider: "deepgram",
-          model: "nova-2",
-          language: "en"
-        },
-        model: {
-          provider: "openai",
-          model: "gpt-4",
-          messages: [
-            {
-              role: "system",
-              content: getContextInstructions()
-            }
-          ],
-          temperature: 0.7,
-        },
-        voice: {
-          provider: "11labs",
-          voiceId: "EXAVITQu4vr4xnSDxMaL", // Sarah - professional and empathetic voice
-          stability: 0.5,
-          similarityBoost: 0.75,
-          model: "eleven_turbo_v2"
-        },
-        name: "NeuroGuardian Assistant",
-        firstMessage: "Hi! I'm your NeuroGuardian voice assistant. How can I help you navigate the platform today?",
-      });
+      // Use your assistant ID to start the call
+      await vapiRef.current.start("0d1418d3-e6ce-4def-9e57-adfa33eb744f");
     } catch (error) {
       console.error("Failed to start call:", error);
       toast({
