@@ -14,10 +14,12 @@ self.onmessage = (e) => {
 };
 
 function processData(data: Uint8Array) {
+  console.log('[Worker] Received data:', data.length, 'bytes');
   // Add to buffer
   for (let i = 0; i < data.length; i++) {
     buffer.push(data[i]);
   }
+  console.log('[Worker] Buffer size:', buffer.length);
 
   // Try to parse packets
   while (buffer.length >= PACKET_LENGTH) {
@@ -47,11 +49,13 @@ function processData(data: Uint8Array) {
     buffer = buffer.slice(PACKET_LENGTH);
 
     if (packet) {
+      console.log('[Worker] Parsed packet:', packet);
       batchBuffer.push(packet);
       
       // Send batch every ~16ms (60 FPS) or when buffer is large
       const now = Date.now();
       if (now - lastBatchTime >= 16 || batchBuffer.length >= 30) {
+        console.log('[Worker] Sending batch:', batchBuffer.length, 'packets');
         self.postMessage({
           type: 'packets',
           packets: batchBuffer,

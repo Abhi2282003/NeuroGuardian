@@ -21,10 +21,15 @@ export default function EEGChart({ data, channelNames, colors, isStreaming }: EE
 
   const defaultChannelNames = Array.from({ length: 6 }, (_, i) => `Channel ${i + 1}`);
 
-  // Update refs when props change
   useEffect(() => {
+    console.log('[EEGChart] Props updated:', { 
+      dataChannels: data.length, 
+      dataPoints: data[0]?.length || 0,
+      isStreaming,
+      channelNames 
+    });
     dataRef.current = data;
-  }, [data]);
+  }, [data, channelNames]);
 
   useEffect(() => {
     isStreamingRef.current = isStreaming;
@@ -67,10 +72,12 @@ export default function EEGChart({ data, channelNames, colors, isStreaming }: EE
     let animationId: number;
     const animate = () => {
       if (!isStreamingRef.current) {
+        console.log('[EEGChart] Not streaming, skipping frame');
         animationId = requestAnimationFrame(animate);
         return;
       }
 
+      console.log('[EEGChart] Animating frame, channels:', linesRef.current.length);
       // Update each channel
       linesRef.current.forEach((line, channelIdx) => {
         const channelData = dataRef.current[channelIdx];

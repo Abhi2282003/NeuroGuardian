@@ -107,17 +107,20 @@ export default function BioAmp({ onBack }: BioAmpProps) {
     try {
       console.log('BioAmp: Starting stream...');
       await startStream((packet) => {
-        console.log('BioAmp: Received packet:', packet);
+        console.log('BioAmp: Received packet in callback:', packet);
         if (isPaused) return;
         
         // Update channels with real data
         setChannels(prev => {
+          console.log('BioAmp: Updating channels state, previous length:', prev[0]?.length);
           const newChannels = prev.map((channel, idx) => {
             if (!selectedChannels[idx]) return channel;
             
             const newValue = packet.channels[idx] || 8192;
             const filtered = filtersRef.current[idx].process(newValue);
-            return [...channel.slice(-500), filtered];
+            const updated = [...channel.slice(-500), filtered];
+            console.log(`BioAmp: Channel ${idx} updated, new length:`, updated.length, 'value:', filtered);
+            return updated;
           });
           
           // Record if recording is active
@@ -402,6 +405,10 @@ export default function BioAmp({ onBack }: BioAmpProps) {
                   .map((selected, idx) => selected ? `Ch${idx + 1}` : null)
                   .filter(Boolean) as string[]}
               />
+              <div className="text-xs text-muted-foreground mt-2">
+                Debug: Channels={displayChannels.length}, DataPoints={displayChannels[0]?.length || 0}, 
+                Streaming={status.streaming.toString()}, Demo={demoMode.toString()}
+              </div>
             </div>
           </CardContent>
         </Card>
