@@ -11,6 +11,7 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import BioAmp from "./pages/BioAmp";
 import Screening from "./pages/Screening";
+import { StudentDashboard } from "./components/student/StudentDashboard";
 import SpiralDrawing from "./pages/screening/SpiralDrawing";
 import FingerTapping from "./pages/screening/FingerTapping";
 import MemoryTest from "./pages/screening/MemoryTest";
@@ -37,14 +38,22 @@ const App = () => (
         <Route path="/" element={<Home />} />
         <Route path="/auth" element={<Auth />} />
         <Route path="/wellness" element={<Index />} />
-        <Route 
-          path="/dashboard" 
-          element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          } 
-        />
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/student"
+            element={
+              <ProtectedRoute>
+                <StudentDashboard />
+              </ProtectedRoute>
+            }
+          />
         <Route 
           path="/bioamp" 
           element={

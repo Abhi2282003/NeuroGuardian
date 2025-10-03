@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Brain, Activity, Users, FileText, LogOut, Play } from 'lucide-react';
+import { Brain, Activity, Users, FileText, LogOut, Play, Heart } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -130,6 +130,25 @@ export default function Dashboard() {
             {profile?.role === 'admin' && 'Configure system settings and manage users'}
           </p>
         </div>
+
+        {/* Student Portal Card - Special highlight for patients */}
+        {profile?.role === 'patient' && (
+          <Link to="/student">
+            <Card className="mb-6 bg-gradient-to-br from-purple-500/10 to-pink-500/10 border-purple-500/20 hover:shadow-xl transition-all cursor-pointer">
+              <CardHeader>
+                <div className="flex items-start gap-4">
+                  <Heart className="h-10 w-10 text-purple-500" />
+                  <div className="flex-1">
+                    <CardTitle className="text-2xl">Student Wellness Portal</CardTitle>
+                    <CardDescription className="text-base mt-2">
+                      Your complete mental health companion: Daily check-ins, AI support, progress tracking, and secure counsellor connections
+                    </CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+            </Card>
+          </Link>
+        )}
 
         {/* Main Activities */}
         <div className="grid md:grid-cols-3 gap-6 mb-8">

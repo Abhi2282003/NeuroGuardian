@@ -96,6 +96,116 @@ export type Database = {
           },
         ]
       }
+      connection_requests: {
+        Row: {
+          alert_id: string
+          counsellor_id: string
+          created_at: string
+          id: string
+          message: string
+          responded_at: string | null
+          status: Database["public"]["Enums"]["alert_status"]
+          student_id: string
+        }
+        Insert: {
+          alert_id: string
+          counsellor_id: string
+          created_at?: string
+          id?: string
+          message: string
+          responded_at?: string | null
+          status?: Database["public"]["Enums"]["alert_status"]
+          student_id: string
+        }
+        Update: {
+          alert_id?: string
+          counsellor_id?: string
+          created_at?: string
+          id?: string
+          message?: string
+          responded_at?: string | null
+          status?: Database["public"]["Enums"]["alert_status"]
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "connection_requests_alert_id_fkey"
+            columns: ["alert_id"]
+            isOneToOne: false
+            referencedRelation: "high_risk_alerts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      daily_check_ins: {
+        Row: {
+          check_date: string
+          created_at: string
+          id: string
+          mood: number
+          notes: string | null
+          sleep_hours: number
+          stress: number
+          user_id: string
+        }
+        Insert: {
+          check_date?: string
+          created_at?: string
+          id?: string
+          mood: number
+          notes?: string | null
+          sleep_hours: number
+          stress: number
+          user_id: string
+        }
+        Update: {
+          check_date?: string
+          created_at?: string
+          id?: string
+          mood?: number
+          notes?: string | null
+          sleep_hours?: number
+          stress?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      high_risk_alerts: {
+        Row: {
+          age_range: string
+          created_at: string
+          id: string
+          resolved: boolean | null
+          resolved_at: string | null
+          risk_level: Database["public"]["Enums"]["risk_level_type"]
+          score: number | null
+          source: string
+          user_id: string
+        }
+        Insert: {
+          age_range: string
+          created_at?: string
+          id?: string
+          resolved?: boolean | null
+          resolved_at?: string | null
+          risk_level: Database["public"]["Enums"]["risk_level_type"]
+          score?: number | null
+          source: string
+          user_id: string
+        }
+        Update: {
+          age_range?: string
+          created_at?: string
+          id?: string
+          resolved?: boolean | null
+          resolved_at?: string | null
+          risk_level?: Database["public"]["Enums"]["risk_level_type"]
+          score?: number | null
+          source?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       patients: {
         Row: {
           age: number | null
@@ -145,6 +255,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          condition: Database["public"]["Enums"]["condition_type"] | null
           created_at: string | null
           id: string
           locale: string | null
@@ -154,6 +265,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          condition?: Database["public"]["Enums"]["condition_type"] | null
           created_at?: string | null
           id: string
           locale?: string | null
@@ -163,6 +275,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          condition?: Database["public"]["Enums"]["condition_type"] | null
           created_at?: string | null
           id?: string
           locale?: string | null
@@ -210,6 +323,44 @@ export type Database = {
             columns: ["session_id"]
             isOneToOne: false
             referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      secure_messages: {
+        Row: {
+          connection_request_id: string
+          created_at: string
+          id: string
+          message: string
+          read: boolean | null
+          receiver_id: string
+          sender_id: string
+        }
+        Insert: {
+          connection_request_id: string
+          created_at?: string
+          id?: string
+          message: string
+          read?: boolean | null
+          receiver_id: string
+          sender_id: string
+        }
+        Update: {
+          connection_request_id?: string
+          created_at?: string
+          id?: string
+          message?: string
+          read?: boolean | null
+          receiver_id?: string
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "secure_messages_connection_request_id_fkey"
+            columns: ["connection_request_id"]
+            isOneToOne: false
+            referencedRelation: "connection_requests"
             referencedColumns: ["id"]
           },
         ]
@@ -280,6 +431,72 @@ export type Database = {
         }
         Relationships: []
       }
+      volunteer_messages: {
+        Row: {
+          approved: boolean | null
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string
+          feedback: string | null
+          id: string
+          message: string
+          target_risk_level: Database["public"]["Enums"]["risk_level_type"]
+          template_name: string
+          volunteer_id: string
+        }
+        Insert: {
+          approved?: boolean | null
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          feedback?: string | null
+          id?: string
+          message: string
+          target_risk_level: Database["public"]["Enums"]["risk_level_type"]
+          template_name: string
+          volunteer_id: string
+        }
+        Update: {
+          approved?: boolean | null
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          feedback?: string | null
+          id?: string
+          message?: string
+          target_risk_level?: Database["public"]["Enums"]["risk_level_type"]
+          template_name?: string
+          volunteer_id?: string
+        }
+        Relationships: []
+      }
+      volunteer_trust_scores: {
+        Row: {
+          approved_messages: number | null
+          id: string
+          rejected_messages: number | null
+          trusted: boolean | null
+          updated_at: string
+          volunteer_id: string
+        }
+        Insert: {
+          approved_messages?: number | null
+          id?: string
+          rejected_messages?: number | null
+          trusted?: boolean | null
+          updated_at?: string
+          volunteer_id: string
+        }
+        Update: {
+          approved_messages?: number | null
+          id?: string
+          rejected_messages?: number | null
+          trusted?: boolean | null
+          updated_at?: string
+          volunteer_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -294,9 +511,16 @@ export type Database = {
       }
     }
     Enums: {
+      alert_status: "pending" | "accepted" | "declined" | "expired"
       app_role: "admin" | "doctor" | "health_worker" | "patient" | "volunteer"
+      condition_type:
+        | "student_mental_health"
+        | "parkinsons"
+        | "alzheimers"
+        | "other_neurological"
       disorder_type: "parkinson" | "alzheimer" | "epilepsy"
       risk_level: "low" | "moderate" | "high"
+      risk_level_type: "low" | "moderate" | "high" | "severe"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -424,9 +648,17 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      alert_status: ["pending", "accepted", "declined", "expired"],
       app_role: ["admin", "doctor", "health_worker", "patient", "volunteer"],
+      condition_type: [
+        "student_mental_health",
+        "parkinsons",
+        "alzheimers",
+        "other_neurological",
+      ],
       disorder_type: ["parkinson", "alzheimer", "epilepsy"],
       risk_level: ["low", "moderate", "high"],
+      risk_level_type: ["low", "moderate", "high", "severe"],
     },
   },
 } as const
