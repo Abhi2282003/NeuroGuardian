@@ -10,85 +10,92 @@ export default function Home() {
       title: "EEG Monitoring",
       description: "Real-time brainwave analysis with BioAmp devices",
       path: "/auth",
-      color: "text-cyan-400"
+      gradient: "from-primary to-primary/60"
     },
     {
       icon: Heart,
       title: "Mindfulness Practices",
       description: "Guided meditation, breathing exercises, and relaxation",
       path: "/wellness",
-      color: "text-primary"
+      gradient: "from-accent to-accent/60"
     },
     {
       icon: Activity,
       title: "Neurological Screening",
       description: "Early detection assessments for cognitive health",
       path: "/auth",
-      color: "text-cyan-400"
+      gradient: "from-secondary to-secondary/60"
     },
     {
       icon: Sparkles,
       title: "Personalized Insights",
       description: "Track your progress and optimize your wellness",
       path: "/auth",
-      color: "text-primary"
+      gradient: "from-primary to-accent"
     }
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-background">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted">
       {/* Navigation */}
-      <nav className="border-b border-border/40 bg-card/30 backdrop-blur-sm sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <Brain className="h-6 w-6 text-primary" />
-            <span className="font-bold text-xl">NeuroScreen</span>
+      <nav className="border-b border-border/50 bg-card/50 backdrop-blur-lg sticky top-0 z-50 shadow-sm">
+        <div className="max-w-7xl mx-auto px-6 py-5 flex justify-between items-center">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-xl bg-gradient-to-br from-primary to-accent shadow-lg">
+              <Brain className="h-6 w-6 text-primary-foreground" />
+            </div>
+            <span className="font-bold text-2xl bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">NeuroScreen</span>
           </div>
           <Link to="/auth">
-            <Button variant="outline">Sign In</Button>
+            <Button size="lg" className="shadow-lg">Sign In</Button>
           </Link>
         </div>
       </nav>
 
       {/* Hero Section */}
-      <div className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-background to-cyan-500/20 animate-pulse" />
+      <div className="relative overflow-hidden py-20 sm:py-32">
         <div className="absolute inset-0">
-          <div className="absolute top-20 left-10 w-72 h-72 bg-primary/10 rounded-full blur-3xl animate-pulse" />
-          <div className="absolute bottom-20 right-10 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl animate-pulse delay-1000" />
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-3xl animate-pulse" />
+          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-accent/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
         </div>
         
-        <div className="relative max-w-7xl mx-auto px-4 py-24 sm:px-6 lg:px-8">
-          <div className="text-center space-y-10">
-            <div className="inline-flex items-center gap-3 px-6 py-3 rounded-full bg-primary/20 border-2 border-primary/40 backdrop-blur-md shadow-gentle">
-              <Brain className="h-6 w-6 text-primary animate-pulse" />
-              <span className="text-base font-semibold text-primary">Next-Gen Neuro-Wellness Platform</span>
+        <div className="relative max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
+          <div className="text-center space-y-12">
+            <div className="inline-flex items-center gap-3 px-8 py-4 rounded-full bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/30 backdrop-blur-xl shadow-elegant animate-fade-in">
+              <div className="relative">
+                <Brain className="h-7 w-7 text-primary animate-pulse" />
+                <div className="absolute inset-0 bg-primary/20 rounded-full blur-md" />
+              </div>
+              <span className="text-lg font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                Next-Gen Neuro-Wellness Platform
+              </span>
             </div>
             
-            <h1 className="text-6xl md:text-8xl font-extrabold leading-tight">
-              <span className="bg-gradient-to-r from-primary via-cyan-400 to-primary bg-clip-text text-transparent animate-pulse">
+            <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black leading-tight tracking-tight">
+              <span className="block bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent animate-fade-in" style={{ animationDelay: '0.1s' }}>
                 Monitor Your Mind,
               </span>
-              <br />
-              <span className="text-foreground drop-shadow-lg">Master Your Wellness</span>
+              <span className="block mt-2 text-foreground animate-fade-in" style={{ animationDelay: '0.2s' }}>
+                Master Your Wellness
+              </span>
             </h1>
             
-            <p className="text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-              Cutting-edge AI-powered neurological screening, real-time EEG monitoring with BioAmp devices, 
-              and science-backed mindfulness practices for optimal brain health
+            <p className="text-xl sm:text-2xl text-muted-foreground max-w-4xl mx-auto leading-relaxed animate-fade-in" style={{ animationDelay: '0.3s' }}>
+              Harness the power of AI-driven neurological screening, real-time EEG monitoring with BioAmp devices, 
+              and scientifically-proven mindfulness practices to optimize your brain health and overall wellbeing
             </p>
             
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <div className="flex flex-col sm:flex-row gap-5 justify-center items-center animate-fade-in" style={{ animationDelay: '0.4s' }}>
               <Link to="/auth">
-                <Button size="lg" className="text-lg px-8">
-                  <Brain className="mr-2 h-5 w-5" />
+                <Button size="lg" className="text-lg px-10 py-7 shadow-elegant hover:shadow-2xl hover:scale-105 transition-all duration-300">
+                  <Brain className="mr-3 h-6 w-6" />
                   Get Started
-                  <ArrowRight className="ml-2 h-5 w-5" />
+                  <ArrowRight className="ml-3 h-6 w-6" />
                 </Button>
               </Link>
               <Link to="/wellness">
-                <Button size="lg" variant="outline" className="text-lg px-8">
-                  <Heart className="mr-2 h-5 w-5" />
+                <Button size="lg" variant="outline" className="text-lg px-10 py-7 shadow-card hover:shadow-elegant hover:scale-105 transition-all duration-300">
+                  <Heart className="mr-3 h-6 w-6" />
                   Try Wellness Tools
                 </Button>
               </Link>
@@ -98,22 +105,34 @@ export default function Home() {
       </div>
 
       {/* Features Grid */}
-      <div className="max-w-7xl mx-auto px-4 py-20 sm:px-6 lg:px-8">
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="max-w-7xl mx-auto px-6 py-24 sm:px-8 lg:px-12">
+        <div className="text-center mb-16">
+          <h2 className="text-4xl sm:text-5xl font-bold mb-4 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+            Powerful Features for Your Brain Health
+          </h2>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            Everything you need to monitor, understand, and improve your neurological wellness
+          </p>
+        </div>
+        
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
           {features.map((feature, index) => {
             const Icon = feature.icon;
             return (
               <Link key={index} to={feature.path}>
-                <Card className="h-full shadow-card hover:shadow-gentle transition-all duration-300 hover:-translate-y-1 cursor-pointer group">
-                  <CardHeader>
-                    <Icon className={`h-12 w-12 ${feature.color} mb-4 group-hover:scale-110 transition-transform`} />
-                    <CardTitle className="text-xl">{feature.title}</CardTitle>
-                    <CardDescription>{feature.description}</CardDescription>
+                <Card className="h-full shadow-card hover:shadow-elegant transition-all duration-500 hover:-translate-y-2 cursor-pointer group border-border/50 bg-card/50 backdrop-blur-sm overflow-hidden relative">
+                  <div className={`absolute inset-0 bg-gradient-to-br ${feature.gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-500`} />
+                  <CardHeader className="relative">
+                    <div className={`inline-flex p-4 rounded-2xl bg-gradient-to-br ${feature.gradient} mb-6 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500 shadow-lg`}>
+                      <Icon className="h-8 w-8 text-primary-foreground" />
+                    </div>
+                    <CardTitle className="text-2xl mb-3 group-hover:text-primary transition-colors">{feature.title}</CardTitle>
+                    <CardDescription className="text-base leading-relaxed">{feature.description}</CardDescription>
                   </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center text-sm text-primary group-hover:gap-2 transition-all">
-                      Learn more
-                      <ArrowRight className="h-4 w-4 ml-1 group-hover:translate-x-1 transition-transform" />
+                  <CardContent className="relative">
+                    <div className="flex items-center text-sm font-semibold text-primary group-hover:gap-2 transition-all">
+                      Explore feature
+                      <ArrowRight className="h-4 w-4 ml-1 group-hover:translate-x-2 transition-transform duration-300" />
                     </div>
                   </CardContent>
                 </Card>
@@ -124,13 +143,23 @@ export default function Home() {
       </div>
 
       {/* Footer */}
-      <footer className="border-t border-border/40 mt-20">
-        <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-          <p className="text-sm text-muted-foreground text-center">
-            ⚠️ This is a preliminary screening tool, not a diagnosis. Seek professional medical advice.
-            <br />
-            <span className="text-xs">Platform inspired by Chords-Web. Works with Upside Down Labs BioAmp/Chords devices.</span>
-          </p>
+      <footer className="border-t border-border/50 mt-32 bg-card/30 backdrop-blur-sm">
+        <div className="max-w-7xl mx-auto px-6 py-12 sm:px-8 lg:px-12">
+          <div className="text-center space-y-4">
+            <div className="flex items-center justify-center gap-3 mb-6">
+              <div className="p-2 rounded-xl bg-gradient-to-br from-primary to-accent shadow-lg">
+                <Brain className="h-5 w-5 text-primary-foreground" />
+              </div>
+              <span className="font-bold text-xl bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">NeuroScreen</span>
+            </div>
+            <p className="text-sm text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+              ⚠️ <strong>Important:</strong> This is a preliminary screening tool, not a medical diagnosis. 
+              Always consult with qualified healthcare professionals for medical advice.
+            </p>
+            <p className="text-xs text-muted-foreground/70">
+              Platform inspired by Chords-Web • Compatible with Upside Down Labs BioAmp/Chords devices
+            </p>
+          </div>
         </div>
       </footer>
     </div>
