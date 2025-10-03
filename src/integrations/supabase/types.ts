@@ -98,7 +98,7 @@ export type Database = {
       }
       connection_requests: {
         Row: {
-          alert_id: string
+          alert_id: string | null
           counsellor_id: string
           created_at: string
           id: string
@@ -108,7 +108,7 @@ export type Database = {
           student_id: string
         }
         Insert: {
-          alert_id: string
+          alert_id?: string | null
           counsellor_id: string
           created_at?: string
           id?: string
@@ -118,7 +118,7 @@ export type Database = {
           student_id: string
         }
         Update: {
-          alert_id?: string
+          alert_id?: string | null
           counsellor_id?: string
           created_at?: string
           id?: string
@@ -244,6 +244,13 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "patients_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "available_counsellors"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "patients_created_by_fkey"
             columns: ["created_by"]
@@ -401,6 +408,13 @@ export type Database = {
             foreignKeyName: "sessions_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
+            referencedRelation: "available_counsellors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sessions_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -499,7 +513,16 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      available_counsellors: {
+        Row: {
+          active_connections: number | null
+          id: string | null
+          name: string | null
+          organization: string | null
+          role: Database["public"]["Enums"]["app_role"] | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       has_role: {
