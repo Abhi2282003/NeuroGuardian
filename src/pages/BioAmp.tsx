@@ -377,7 +377,7 @@ export default function BioAmp({ onBack }: BioAmpProps) {
           </CardContent>
         </Card>
 
-        {/* External Stream Iframe */}
+        {/* External Stream Link */}
         <Card className="shadow-card mb-6">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -389,13 +389,16 @@ export default function BioAmp({ onBack }: BioAmpProps) {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="w-full h-[600px] rounded-lg overflow-hidden border border-border">
-              <iframe
-                src="https://neuroguardian.vercel.app/stream"
-                className="w-full h-full"
-                title="NeuroGuardian EEG Stream"
-                allow="serial; usb"
-              />
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">
+                Web Serial API requires opening the stream in a new tab for device access.
+              </p>
+              <Button 
+                className="w-full" 
+                onClick={() => window.open('https://neuroguardian.vercel.app/stream', '_blank')}
+              >
+                🚀 Open NeuroGuardian Stream in New Tab
+              </Button>
             </div>
           </CardContent>
         </Card>
