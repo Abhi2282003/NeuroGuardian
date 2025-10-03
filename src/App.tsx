@@ -13,6 +13,7 @@ import CounsellorDashboard from "./pages/CounsellorDashboard";
 import BioAmp from "./pages/BioAmp";
 import Screening from "./pages/Screening";
 import { StudentDashboard } from "./components/student/StudentDashboard";
+import NeurologicalDashboard from "./pages/NeurologicalDashboard";
 import SpiralDrawing from "./pages/screening/SpiralDrawing";
 import FingerTapping from "./pages/screening/FingerTapping";
 import MemoryTest from "./pages/screening/MemoryTest";
@@ -73,8 +74,16 @@ const App = () => (
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/neuro"
+            element={
+              <ProtectedRoute>
+                <NeurologicalDashboard />
+              </ProtectedRoute>
+            }
+          />
         <Route 
-          path="/bioamp" 
+          path="/bioamp"
           element={
             <ProtectedRoute>
               <BioAmp onBack={() => window.location.href = '/dashboard'} />

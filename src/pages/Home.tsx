@@ -98,6 +98,9 @@ export default function Home() {
             <span className="font-bold text-2xl bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">NeuroGuardian</span>
           </div>
           <div className="flex items-center gap-4">
+            <Link to="/neuro">
+              <Button variant="ghost">Neurological Dashboard</Button>
+            </Link>
             <Link to="/wellness">
               <Button variant="ghost">Try Wellness Tools</Button>
             </Link>
