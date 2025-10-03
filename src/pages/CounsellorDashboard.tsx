@@ -130,23 +130,47 @@ export default function CounsellorDashboard() {
   const loadConnectedStudents = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {
+        console.log("No user found");
+        return;
+      }
 
-      const { data: connections } = await supabase
+      console.log("Loading connected students for counsellor:", user.id);
+
+      const { data: connections, error: connError } = await supabase
         .from("connection_requests")
         .select("student_id")
         .eq("counsellor_id", user.id)
         .eq("status", "accepted")
         .is("disconnected_at", null);
 
+      console.log("Connections found:", connections);
+      
+      if (connError) {
+        console.error("Error fetching connections:", connError);
+        return;
+      }
+
       if (connections && connections.length > 0) {
         const studentIds = connections.map(c => c.student_id);
-        const { data: profiles } = await supabase
+        console.log("Student IDs:", studentIds);
+        
+        const { data: profiles, error: profileError } = await supabase
           .from("profiles")
           .select("id, name, created_at")
           .in("id", studentIds);
 
+        console.log("Student profiles:", profiles);
+        
+        if (profileError) {
+          console.error("Error fetching profiles:", profileError);
+          return;
+        }
+
         setConnectedStudents(profiles || []);
+      } else {
+        console.log("No connections found");
+        setConnectedStudents([]);
       }
     } catch (error) {
       console.error("Error loading connected students:", error);
@@ -158,12 +182,33 @@ export default function CounsellorDashboard() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { data } = await supabase
+      // First get the connection_request_id
+      const { data: connection } = await supabase
+        .from("connection_requests")
+        .select("id")
+        .eq("counsellor_id", user.id)
+        .eq("student_id", studentId)
+        .eq("status", "accepted")
+        .is("disconnected_at", null)
+        .maybeSingle();
+
+      if (!connection) {
+        console.log("No active connection found");
+        setMessages([]);
+        return;
+      }
+
+      // Then get all messages for this connection
+      const { data, error } = await supabase
         .from("secure_messages")
         .select("*")
-        .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
-        .or(`sender_id.eq.${studentId},receiver_id.eq.${studentId}`)
+        .eq("connection_request_id", connection.id)
         .order("created_at", { ascending: true });
+
+      if (error) {
+        console.error("Error fetching messages:", error);
+        return;
+      }
 
       setMessages(data || []);
 
@@ -172,7 +217,8 @@ export default function CounsellorDashboard() {
         .from("secure_messages")
         .update({ read: true })
         .eq("receiver_id", user.id)
-        .eq("sender_id", studentId);
+        .eq("sender_id", studentId)
+        .eq("read", false);
     } catch (error) {
       console.error("Error loading messages:", error);
     }
@@ -191,7 +237,8 @@ export default function CounsellorDashboard() {
         .eq("counsellor_id", user.id)
         .eq("student_id", selectedStudent)
         .eq("status", "accepted")
-        .single();
+        .is("disconnected_at", null)
+        .maybeSingle();
 
       if (!connection) {
         toast.error("Connection not found");
