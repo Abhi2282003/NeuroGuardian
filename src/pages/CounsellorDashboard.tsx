@@ -56,6 +56,8 @@ export default function CounsellorDashboard() {
   const [newMessage, setNewMessage] = useState("");
   const [recentCheckIns, setRecentCheckIns] = useState<CheckIn[]>([]);
   const [currentUserId, setCurrentUserId] = useState<string>("");
+  const [hasAccess, setHasAccess] = useState(false);
+  const [userRole, setUserRole] = useState<string>("");
 
   useEffect(() => {
     loadRequests();
@@ -105,7 +107,21 @@ export default function CounsellorDashboard() {
 
   const getCurrentUser = async () => {
     const { data: { user } } = await supabase.auth.getUser();
-    if (user) setCurrentUserId(user.id);
+    if (!user) return;
+    
+    setCurrentUserId(user.id);
+
+    // Check user role
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+
+    if (profile) {
+      setUserRole(profile.role);
+      setHasAccess(profile.role === "doctor" || profile.role === "volunteer");
+    }
   };
 
   const loadConnectedStudents = async () => {
@@ -330,6 +346,24 @@ export default function CounsellorDashboard() {
     );
   }
 
+  if (!hasAccess) {
+    return (
+      <div className="container max-w-4xl mx-auto p-6">
+        <Card className="p-12 text-center space-y-4">
+          <AlertCircle className="h-16 w-16 mx-auto text-orange-500" />
+          <h2 className="text-2xl font-bold">Access Denied</h2>
+          <p className="text-muted-foreground">
+            This dashboard is only accessible to counsellors and volunteers.
+            {userRole === "patient" && " You are currently logged in as a student."}
+          </p>
+          <Button onClick={() => window.location.href = "/student"}>
+            Go to Student Dashboard
+          </Button>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="container max-w-7xl mx-auto p-6 space-y-6">
       <div className="space-y-2">
@@ -463,20 +497,21 @@ export default function CounsellorDashboard() {
           </div>
 
           <Card className="p-6">
-            <h3 className="font-semibold text-lg mb-4">Quick Actions</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Button variant="outline" className="h-24 flex flex-col gap-2">
-                <Calendar className="h-6 w-6" />
-                <span>Schedule Session</span>
-              </Button>
-              <Button variant="outline" className="h-24 flex flex-col gap-2">
-                <User className="h-6 w-6" />
-                <span>Update Profile</span>
-              </Button>
-              <Button variant="outline" className="h-24 flex flex-col gap-2">
-                <Activity className="h-6 w-6" />
-                <span>View Analytics</span>
-              </Button>
+            <h3 className="font-semibold text-lg mb-4">Resources & Support</h3>
+            <div className="space-y-3">
+              <div className="p-4 rounded-lg bg-muted/50">
+                <h4 className="font-medium mb-2">Crisis Helpline</h4>
+                <p className="text-sm text-muted-foreground mb-2">24/7 Mental Health Support</p>
+                <p className="text-lg font-semibold">1-800-273-8255</p>
+              </div>
+              <div className="p-4 rounded-lg bg-muted/50">
+                <h4 className="font-medium mb-2">Guidelines</h4>
+                <p className="text-sm text-muted-foreground">Review best practices for student counselling</p>
+              </div>
+              <div className="p-4 rounded-lg bg-muted/50">
+                <h4 className="font-medium mb-2">Training Resources</h4>
+                <p className="text-sm text-muted-foreground">Access professional development materials</p>
+              </div>
             </div>
           </Card>
         </TabsContent>
@@ -500,11 +535,27 @@ export default function CounsellorDashboard() {
                         Connected since {new Date(student.created_at).toLocaleDateString()}
                       </p>
                       <div className="flex gap-2">
-                        <Button size="sm" onClick={() => setSelectedStudent(student.id)}>
+                        <Button 
+                          size="sm" 
+                          onClick={() => {
+                            setSelectedStudent(student.id);
+                            // Switch to messages tab
+                            const messagesTab = document.querySelector('[value="messages"]') as HTMLButtonElement;
+                            messagesTab?.click();
+                          }}
+                        >
                           <MessageCircle className="h-4 w-4 mr-2" />
                           Message
                         </Button>
-                        <Button size="sm" variant="outline">
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => {
+                            // Switch to activity tab
+                            const activityTab = document.querySelector('[value="activity"]') as HTMLButtonElement;
+                            activityTab?.click();
+                          }}
+                        >
                           View Progress
                         </Button>
                       </div>
