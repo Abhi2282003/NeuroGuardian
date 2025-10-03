@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -61,6 +61,15 @@ export default function CounsellorDashboard() {
   const [hasAccess, setHasAccess] = useState(false);
   const [userRole, setUserRole] = useState<string>("");
   const [activeTab, setActiveTab] = useState("overview");
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   useEffect(() => {
     loadRequests();
@@ -180,10 +189,15 @@ export default function CounsellorDashboard() {
   const loadMessages = async (studentId: string) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {
+        console.log("No user found when loading messages");
+        return;
+      }
+
+      console.log("Loading messages for student:", studentId, "counsellor:", user.id);
 
       // First get the connection_request_id
-      const { data: connection } = await supabase
+      const { data: connection, error: connError } = await supabase
         .from("connection_requests")
         .select("id")
         .eq("counsellor_id", user.id)
@@ -191,6 +205,8 @@ export default function CounsellorDashboard() {
         .eq("status", "accepted")
         .is("disconnected_at", null)
         .maybeSingle();
+
+      console.log("Connection found:", connection, "Error:", connError);
 
       if (!connection) {
         console.log("No active connection found");
@@ -204,6 +220,8 @@ export default function CounsellorDashboard() {
         .select("*")
         .eq("connection_request_id", connection.id)
         .order("created_at", { ascending: true });
+
+      console.log("Messages loaded:", data?.length, "Error:", error);
 
       if (error) {
         console.error("Error fetching messages:", error);
@@ -667,7 +685,7 @@ export default function CounsellorDashboard() {
                     </h3>
                   </div>
                   <ScrollArea className="h-80 mb-4 pr-4">
-                    <div className="space-y-3">
+                     <div className="space-y-3">
                       {messages.map((msg) => (
                         <div
                           key={msg.id}
@@ -687,6 +705,7 @@ export default function CounsellorDashboard() {
                           </div>
                         </div>
                       ))}
+                      <div ref={messagesEndRef} />
                     </div>
                   </ScrollArea>
                   <div className="flex gap-2">

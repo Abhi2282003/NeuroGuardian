@@ -4,11 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Send, MessageCircle, Clock, UserMinus, AlertCircle } from "lucide-react";
+import { Send, MessageCircle, UserMinus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDistanceToNow } from "date-fns";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -46,30 +45,18 @@ export function SecureChat() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string>("");
-  const [credits, setCredits] = useState(5);
-  const [sessionTime, setSessionTime] = useState(0);
-  const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     loadConnections();
     getUserId();
-    loadCredits();
   }, []);
 
   useEffect(() => {
     if (selectedConnection) {
       loadMessages(selectedConnection.id);
       subscribeToMessages(selectedConnection.id);
-      startChatSession();
     }
-    return () => {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-        endChatSession();
-      }
-    };
   }, [selectedConnection]);
 
   useEffect(() => {
@@ -79,86 +66,6 @@ export function SecureChat() {
   const getUserId = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (user) setUserId(user.id);
-  };
-
-  const loadCredits = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("chat_credits_minutes")
-      .eq("id", user.id)
-      .single();
-
-    if (profile) {
-      setCredits(profile.chat_credits_minutes || 0);
-    }
-  };
-
-  const startChatSession = async () => {
-    if (!selectedConnection || credits <= 0) return;
-
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    const { data: session } = await supabase
-      .from("chat_sessions")
-      .insert({
-        connection_request_id: selectedConnection.id,
-        student_id: user.id,
-        counsellor_id: selectedConnection.counsellor_id,
-      })
-      .select()
-      .single();
-
-    if (session) {
-      setActiveSessionId(session.id);
-      setSessionTime(0);
-
-      // Start timer
-      timerRef.current = setInterval(() => {
-        setSessionTime(prev => {
-          const newTime = prev + 1;
-          if (Math.floor(newTime / 60) >= credits) {
-            // Time's up!
-            endChatSession();
-            return prev;
-          }
-          return newTime;
-        });
-      }, 1000);
-    }
-  };
-
-  const endChatSession = async () => {
-    if (!activeSessionId || !timerRef.current) return;
-
-    clearInterval(timerRef.current);
-    timerRef.current = null;
-
-    const minutesUsed = Math.ceil(sessionTime / 60);
-    
-    await supabase
-      .from("chat_sessions")
-      .update({ 
-        ended_at: new Date().toISOString(),
-        duration_minutes: minutesUsed
-      })
-      .eq("id", activeSessionId);
-
-    const newCredits = Math.max(0, credits - minutesUsed);
-    
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      await supabase
-        .from("profiles")
-        .update({ chat_credits_minutes: newCredits })
-        .eq("id", user.id);
-    }
-
-    setCredits(newCredits);
-    setActiveSessionId(null);
   };
 
   const handleDisconnect = async (connectionId: string) => {
@@ -191,12 +98,6 @@ export function SecureChat() {
         variant: "destructive",
       });
     }
-  };
-
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
   const scrollToBottom = () => {
@@ -389,7 +290,7 @@ export function SecureChat() {
       <Card className="p-4 glass-card md:col-span-2 flex flex-col">
         {selectedConnection && (
           <>
-            <div className="pb-4 border-b mb-4 space-y-3">
+            <div className="pb-4 border-b mb-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <Avatar>
@@ -429,28 +330,6 @@ export function SecureChat() {
                   </AlertDialogContent>
                 </AlertDialog>
               </div>
-
-              {/* Credits and Time Display */}
-              <div className="flex items-center gap-4 text-sm">
-                <div className="flex items-center gap-2">
-                  <Clock className="h-4 w-4 text-primary" />
-                  <span>Session: {formatTime(sessionTime)}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className={credits <= 0 ? "text-destructive font-semibold" : "text-muted-foreground"}>
-                    Credits: {credits} min remaining
-                  </span>
-                </div>
-              </div>
-
-              {credits <= 0 && (
-                <Alert variant="destructive">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>
-                    Your free credits have been used. To continue chatting, please subscribe to our service.
-                  </AlertDescription>
-                </Alert>
-              )}
             </div>
 
             <ScrollArea className="flex-1 pr-4">
@@ -484,11 +363,10 @@ export function SecureChat() {
               <Input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                onKeyPress={(e) => e.key === "Enter" && !input.trim() === false && credits > 0 && sendMessage()}
-                placeholder={credits <= 0 ? "Subscribe to continue chatting..." : "Type your message..."}
-                disabled={credits <= 0}
+                onKeyPress={(e) => e.key === "Enter" && sendMessage()}
+                placeholder="Type your message..."
               />
-              <Button onClick={sendMessage} disabled={!input.trim() || credits <= 0}>
+              <Button onClick={sendMessage} disabled={!input.trim()}>
                 <Send className="h-4 w-4" />
               </Button>
             </div>
