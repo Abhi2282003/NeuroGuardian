@@ -44,10 +44,14 @@ export function BrowseCounsellors() {
 
   const loadCounsellors = async () => {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
       const { data, error } = await supabase
         .from("profiles")
         .select("id, name, role, organization")
         .in("role", ["doctor", "volunteer"])
+        .neq("id", user.id) // Exclude current user
         .order("name");
 
       if (error) throw error;
@@ -93,6 +97,13 @@ export function BrowseCounsellors() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
+
+      // Prevent self-connection
+      if (user.id === counsellorId) {
+        toast.error("You cannot connect to yourself");
+        setSending(false);
+        return;
+      }
 
       const { error } = await supabase
         .from("connection_requests")
