@@ -221,18 +221,37 @@ export default function BioAmp({ onBack }: BioAmpProps) {
           </p>
         </div>
 
-        {!isSupported() && (
-          <Card className="mb-6 border-destructive/50 bg-destructive/5">
-            <CardHeader>
-              <CardTitle>Web Serial Not Available</CardTitle>
-              <CardDescription>
-                Web Serial API requires Chrome/Edge browser on desktop.
-                <br />
-                Please use a compatible browser to connect your BioAmp device.
-              </CardDescription>
-            </CardHeader>
-          </Card>
-        )}
+        <Card className="mb-6 border-primary/50 bg-primary/10">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Zap className="h-5 w-5 text-primary" />
+              Serial Port Access Required
+            </CardTitle>
+            <CardDescription className="space-y-3">
+              <div className="p-4 bg-background/50 rounded-lg border border-primary/20">
+                <p className="font-semibold text-foreground mb-2">⚠️ Lovable Preview Limitation</p>
+                <p className="text-sm mb-3">
+                  Web Serial API is blocked in the preview iframe due to browser security policies.
+                </p>
+                <div className="space-y-2">
+                  <p className="text-sm font-medium">To use your BioAmp device:</p>
+                  <ol className="text-sm space-y-1 list-decimal list-inside">
+                    <li>Click the "Open in New Tab" button below</li>
+                    <li>Connect your Arduino device (Baud: 230400)</li>
+                    <li>Click "Connect via USB" and select your port</li>
+                    <li>Click "Start Stream" to see live EEG visualization</li>
+                  </ol>
+                </div>
+              </div>
+              <Button 
+                className="w-full" 
+                onClick={() => window.open(window.location.href, '_blank')}
+              >
+                🚀 Open in New Tab (Required for Serial Access)
+              </Button>
+            </CardDescription>
+          </CardHeader>
+        </Card>
 
         {/* Full-width EEG Chart */}
         <Card className="shadow-card mb-6">
@@ -369,29 +388,41 @@ export default function BioAmp({ onBack }: BioAmpProps) {
             </CardHeader>
             <CardContent className="space-y-4">
               {!status.connected ? (
-                <Button onClick={handleConnect} className="w-full" disabled={!isSupported()}>
-                  Connect via USB
-                </Button>
+                <>
+                  <Button onClick={handleConnect} className="w-full" disabled={!isSupported()}>
+                    Connect via USB
+                  </Button>
+                  <div className="text-xs text-muted-foreground p-3 bg-muted/20 rounded">
+                    <p className="font-medium mb-1">Expected Device:</p>
+                    <p>• Arduino UNO R4 Minima</p>
+                    <p>• Product ID: 105</p>
+                    <p>• Baud Rate: 230400</p>
+                    <p>• 6 Channels @ 14-bit resolution</p>
+                  </div>
+                </>
               ) : (
                 <>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Status:</span>
-                      <span className="text-primary font-medium">Connected</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Sample Rate:</span>
-                      <span>{status.sampleRate} Hz</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Packets:</span>
-                      <span>{status.totalPackets}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Dropped:</span>
-                      <span className={status.droppedFrames > 0 ? 'text-destructive' : ''}>
-                        {status.droppedFrames}
-                      </span>
+                  <div className="p-3 bg-green-500/10 border border-green-500/30 rounded-lg">
+                    <p className="text-sm font-semibold text-green-400 mb-2">✓ Connection Successful</p>
+                    <div className="space-y-1 text-xs">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Device:</span>
+                        <span className="text-foreground">Arduino UNO R4 Minima</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Sample Rate:</span>
+                        <span className="text-foreground">{status.sampleRate || 250} Hz</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Packets:</span>
+                        <span className="text-foreground">{status.totalPackets}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Dropped:</span>
+                        <span className={status.droppedFrames > 0 ? 'text-destructive' : 'text-foreground'}>
+                          {status.droppedFrames}
+                        </span>
+                      </div>
                     </div>
                   </div>
                   

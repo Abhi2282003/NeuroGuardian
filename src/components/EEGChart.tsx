@@ -115,16 +115,26 @@ export default function EEGChart({ data, channelNames, colors, isStreaming }: EE
       <canvas
         ref={canvasRef}
         className="w-full h-full"
-        style={{ background: 'hsl(var(--muted) / 0.3)' }}
+        style={{ 
+          background: 'linear-gradient(180deg, #0a0f1e 0%, #050811 100%)',
+          backgroundImage: `
+            linear-gradient(0deg, rgba(59, 130, 246, 0.1) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(59, 130, 246, 0.1) 1px, transparent 1px)
+          `,
+          backgroundSize: '40px 40px'
+        }}
       />
-      <div className="absolute top-2 left-2 space-y-1">
+      <div className="absolute top-2 left-2 space-y-1 bg-black/40 backdrop-blur-sm p-2 rounded border border-primary/20">
         {(channelNames || defaultChannelNames).slice(0, data.length).map((name, idx) => (
-          <div key={idx} className="flex items-center gap-2 text-xs">
+          <div key={idx} className="flex items-center gap-2 text-xs font-medium">
             <div
-              className="w-3 h-3 rounded-full"
-              style={{ backgroundColor: (colors || defaultColors)[idx % defaultColors.length] }}
+              className="w-3 h-3 rounded-full shadow-lg"
+              style={{ 
+                backgroundColor: (colors || defaultColors)[idx % defaultColors.length],
+                boxShadow: `0 0 8px ${(colors || defaultColors)[idx % defaultColors.length]}`
+              }}
             />
-            <span className="text-foreground/70">{name}</span>
+            <span className="text-white">{name}</span>
           </div>
         ))}
       </div>
