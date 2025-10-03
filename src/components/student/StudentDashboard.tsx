@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -9,12 +9,14 @@ import { AIAssistant } from "./AIAssistant";
 import { ConnectionRequests } from "./ConnectionRequests";
 import { BrowseCounsellors } from "./BrowseCounsellors";
 import { SecureChat } from "./SecureChat";
-import { Brain, Activity, MessageCircle, Calendar, Heart, AlertCircle, GamepadIcon } from "lucide-react";
+import { Brain, Activity, MessageCircle, Calendar, Heart, AlertCircle, GamepadIcon, LogOut } from "lucide-react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 export function StudentDashboard() {
   const location = useLocation();
+  const navigate = useNavigate();
   const searchParams = new URLSearchParams(location.search);
   const tabParam = searchParams.get('tab');
   const [defaultTab, setDefaultTab] = useState(tabParam || 'checkin');
@@ -81,6 +83,12 @@ export function StudentDashboard() {
     }
   };
 
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    toast.success("Signed out successfully");
+    navigate("/");
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -92,11 +100,17 @@ export function StudentDashboard() {
   return (
     <div className="container max-w-7xl mx-auto p-6 space-y-6">
       {/* Welcome Header */}
-      <div className="space-y-2">
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-          Student Wellness Portal
-        </h1>
-        <p className="text-muted-foreground">Track your mental health journey and connect with support when needed</p>
+      <div className="flex items-center justify-between">
+        <div className="space-y-2">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+            Student Wellness Portal
+          </h1>
+          <p className="text-muted-foreground">Track your mental health journey and connect with support when needed</p>
+        </div>
+        <Button variant="outline" onClick={handleSignOut}>
+          <LogOut className="h-4 w-4 mr-2" />
+          Sign Out
+        </Button>
       </div>
 
       {/* Check-in Reminder */}

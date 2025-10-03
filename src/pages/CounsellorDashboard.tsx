@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Users, MessageCircle, AlertCircle, CheckCircle, X, Activity, TrendingUp, Calendar, User } from "lucide-react";
+import { Users, MessageCircle, AlertCircle, CheckCircle, X, Activity, TrendingUp, Calendar, User, LogOut } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
@@ -46,6 +47,7 @@ interface Message {
 }
 
 export default function CounsellorDashboard() {
+  const navigate = useNavigate();
   const [requests, setRequests] = useState<ConnectionRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeCount, setActiveCount] = useState(0);
@@ -58,6 +60,7 @@ export default function CounsellorDashboard() {
   const [currentUserId, setCurrentUserId] = useState<string>("");
   const [hasAccess, setHasAccess] = useState(false);
   const [userRole, setUserRole] = useState<string>("");
+  const [activeTab, setActiveTab] = useState("overview");
 
   useEffect(() => {
     loadRequests();
@@ -334,6 +337,22 @@ export default function CounsellorDashboard() {
     }
   };
 
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    toast.success("Signed out successfully");
+    navigate("/");
+  };
+
+  const openChat = (studentId: string) => {
+    setSelectedStudent(studentId);
+    setActiveTab("messages");
+  };
+
+  const viewProgress = (studentId: string) => {
+    setSelectedStudent(studentId);
+    setActiveTab("activity");
+  };
+
   const pendingRequests = requests.filter(r => r.status === "pending");
   const activeRequests = requests.filter(r => r.status === "accepted");
   const declinedRequests = requests.filter(r => r.status === "declined");
@@ -366,11 +385,17 @@ export default function CounsellorDashboard() {
 
   return (
     <div className="container max-w-7xl mx-auto p-6 space-y-6">
-      <div className="space-y-2">
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-          Counsellor Dashboard
-        </h1>
-        <p className="text-muted-foreground">Manage your student connections and support requests</p>
+      <div className="flex items-center justify-between">
+        <div className="space-y-2">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+            Counsellor Dashboard
+          </h1>
+          <p className="text-muted-foreground">Manage your student connections and support requests</p>
+        </div>
+        <Button variant="outline" onClick={handleSignOut}>
+          <LogOut className="h-4 w-4 mr-2" />
+          Sign Out
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -405,7 +430,7 @@ export default function CounsellorDashboard() {
         </Card>
       </div>
 
-      <Tabs defaultValue="overview" className="space-y-6">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="overview">
             <Activity className="h-4 w-4 mr-2" />
@@ -449,7 +474,7 @@ export default function CounsellorDashboard() {
                             Connected {new Date(student.created_at).toLocaleDateString()}
                           </p>
                         </div>
-                        <Button size="sm" variant="ghost" onClick={() => setSelectedStudent(student.id)}>
+                        <Button size="sm" variant="ghost" onClick={() => openChat(student.id)}>
                           <MessageCircle className="h-4 w-4" />
                         </Button>
                       </div>
@@ -537,12 +562,7 @@ export default function CounsellorDashboard() {
                       <div className="flex gap-2">
                         <Button 
                           size="sm" 
-                          onClick={() => {
-                            setSelectedStudent(student.id);
-                            // Switch to messages tab
-                            const messagesTab = document.querySelector('[value="messages"]') as HTMLButtonElement;
-                            messagesTab?.click();
-                          }}
+                          onClick={() => openChat(student.id)}
                         >
                           <MessageCircle className="h-4 w-4 mr-2" />
                           Message
@@ -550,11 +570,7 @@ export default function CounsellorDashboard() {
                         <Button 
                           size="sm" 
                           variant="outline"
-                          onClick={() => {
-                            // Switch to activity tab
-                            const activityTab = document.querySelector('[value="activity"]') as HTMLButtonElement;
-                            activityTab?.click();
-                          }}
+                          onClick={() => viewProgress(student.id)}
                         >
                           View Progress
                         </Button>
