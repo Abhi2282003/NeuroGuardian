@@ -184,10 +184,10 @@ const Index = () => {
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-6">
-          <Link to="/">
+          <Link to="/dashboard">
             <Button variant="outline">
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Home
+              Back to Dashboard
             </Button>
           </Link>
         </div>
@@ -198,17 +198,6 @@ const Index = () => {
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             Evidence-based relaxation and mental health techniques to help you find peace and reduce stress
           </p>
-          <div className="mt-6">
-            <Link to="/dashboard">
-              <Button 
-                variant="outline" 
-                className="flex items-center gap-2"
-              >
-                <BarChart3 className="w-4 h-4" />
-                View Progress Dashboard
-              </Button>
-            </Link>
-          </div>
         </div>
 
         {/* Categories */}

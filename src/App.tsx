@@ -22,6 +22,16 @@ import PHQ9 from "./pages/screening/PHQ9";
 import GAD7 from "./pages/screening/GAD7";
 import PSS from "./pages/screening/PSS";
 import AUDIT from "./pages/screening/AUDIT";
+import Games from "./pages/Games";
+import MemoryMatch from "./pages/games/MemoryMatch";
+import SimonSays from "./pages/games/SimonSays";
+import ReactionTime from "./pages/games/ReactionTime";
+import SlidingPuzzle from "./pages/games/SlidingPuzzle";
+import FocusTrainer from "./pages/games/FocusTrainer";
+import BreathingBubbles from "./pages/games/BreathingBubbles";
+import ColorMatch from "./pages/games/ColorMatch";
+import WordSearch from "./pages/games/WordSearch";
+import MoodGarden from "./pages/games/MoodGarden";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import NotFound from "./pages/NotFound";
 
@@ -147,6 +157,94 @@ const App = () => (
           element={
             <ProtectedRoute>
               <AUDIT />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/games" 
+          element={
+            <ProtectedRoute>
+              <Games />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/games/dino" 
+          element={
+            <ProtectedRoute>
+              <DinoGame />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/games/memory" 
+          element={
+            <ProtectedRoute>
+              <MemoryMatch />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/games/simon" 
+          element={
+            <ProtectedRoute>
+              <SimonSays />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/games/reaction" 
+          element={
+            <ProtectedRoute>
+              <ReactionTime />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/games/puzzle" 
+          element={
+            <ProtectedRoute>
+              <SlidingPuzzle />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/games/focus" 
+          element={
+            <ProtectedRoute>
+              <FocusTrainer />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/games/breathing" 
+          element={
+            <ProtectedRoute>
+              <BreathingBubbles />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/games/color" 
+          element={
+            <ProtectedRoute>
+              <ColorMatch />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/games/word" 
+          element={
+            <ProtectedRoute>
+              <WordSearch />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/games/mood" 
+          element={
+            <ProtectedRoute>
+              <MoodGarden />
             </ProtectedRoute>
           } 
         />

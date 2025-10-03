@@ -214,9 +214,9 @@ export function StudentDashboard() {
         </TabsContent>
       </Tabs>
 
-      {/* Fun & Relaxation Games */}
+      {/* Fun & Mind Games */}
       <Card className="p-6 glass-card">
-        <h3 className="text-lg font-semibold mb-4">Fun & Relaxation</h3>
+        <h3 className="text-lg font-semibold mb-4">Fun & Mind Games</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Link to="/wellness">
             <Button variant="outline" className="w-full justify-start">
@@ -224,10 +224,10 @@ export function StudentDashboard() {
               Mindfulness Activities
             </Button>
           </Link>
-          <Link to="/screening/dino">
+          <Link to="/games">
             <Button variant="outline" className="w-full justify-start">
               <GamepadIcon className="h-4 w-4 mr-2" />
-              Dino Game
+              Play Mind Games (10+)
             </Button>
           </Link>
           <Button variant="outline" className="w-full justify-start">
