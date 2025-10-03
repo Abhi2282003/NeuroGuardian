@@ -377,6 +377,29 @@ export default function BioAmp({ onBack }: BioAmpProps) {
           </CardContent>
         </Card>
 
+        {/* External Stream Iframe */}
+        <Card className="shadow-card mb-6">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Activity className="h-5 w-5 text-primary" />
+              EEG Monitoring Stream
+            </CardTitle>
+            <CardDescription>
+              External visualization from NeuroGuardian
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="w-full h-[600px] rounded-lg overflow-hidden border border-border">
+              <iframe
+                src="https://neuroguardian.vercel.app/stream"
+                className="w-full h-full"
+                title="NeuroGuardian EEG Stream"
+                allow="serial; usb"
+              />
+            </div>
+          </CardContent>
+        </Card>
+
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           <Card className="shadow-card">
             <CardHeader>
