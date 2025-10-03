@@ -142,7 +142,7 @@ export function StudentDashboard() {
           </Card>
         </Link>
 
-        <Link to="/bioamp">
+        <a href="https://neuroguardian.vercel.app/stream" target="_blank" rel="noopener noreferrer">
           <Card className="p-4 glass-card hover-scale cursor-pointer">
             <div className="flex items-center gap-3">
               <Activity className="h-8 w-8 text-green-500" />
@@ -152,7 +152,7 @@ export function StudentDashboard() {
               </div>
             </div>
           </Card>
-        </Link>
+        </a>
 
         <Link to="/wellness">
           <Card className="p-4 glass-card hover-scale cursor-pointer">
