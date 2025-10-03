@@ -73,15 +73,15 @@ export default function BioAmp({ onBack }: BioAmpProps) {
 
   const handleStartStream = async () => {
     try {
-      await startStream((packet) => {
+      await startStream((channelData) => {
         if (isPaused) return;
         
-        // Update channels with real data
+        // Update channels with real data  
         setChannels(prev => {
           const newChannels = prev.map((channel, idx) => {
             if (!selectedChannels[idx]) return channel;
             
-            const newValue = packet.channels[idx] || 8192;
+            const newValue = channelData[idx] || 8192;
             const filtered = filtersRef.current[idx].process(newValue);
             return [...channel.slice(-500), filtered];
           });
@@ -89,8 +89,8 @@ export default function BioAmp({ onBack }: BioAmpProps) {
           // Record if recording is active
           if (isRecording) {
             recordedDataRef.current.push({
-              timestamp: packet.timestamp,
-              channels: packet.channels
+              timestamp: Date.now(),
+              channels: channelData
             });
           }
           
@@ -221,37 +221,39 @@ export default function BioAmp({ onBack }: BioAmpProps) {
           </p>
         </div>
 
-        <Card className="mb-6 border-primary/50 bg-primary/10">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Zap className="h-5 w-5 text-primary" />
-              Serial Port Access Required
-            </CardTitle>
-            <CardDescription className="space-y-3">
-              <div className="p-4 bg-background/50 rounded-lg border border-primary/20">
-                <p className="font-semibold text-foreground mb-2">⚠️ Lovable Preview Limitation</p>
-                <p className="text-sm mb-3">
-                  Web Serial API is blocked in the preview iframe due to browser security policies.
-                </p>
-                <div className="space-y-2">
-                  <p className="text-sm font-medium">To use your BioAmp device:</p>
-                  <ol className="text-sm space-y-1 list-decimal list-inside">
-                    <li>Click the "Open in New Tab" button below</li>
-                    <li>Connect your Arduino device (Baud: 230400)</li>
-                    <li>Click "Connect via USB" and select your port</li>
-                    <li>Click "Start Stream" to see live EEG visualization</li>
-                  </ol>
+        {!isSupported() && (
+          <Card className="mb-6 border-primary/50 bg-primary/10">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Zap className="h-5 w-5 text-primary" />
+                Serial Port Access Required
+              </CardTitle>
+              <CardDescription className="space-y-3">
+                <div className="p-4 bg-background/50 rounded-lg border border-primary/20">
+                  <p className="font-semibold text-foreground mb-2">⚠️ Lovable Preview Limitation</p>
+                  <p className="text-sm mb-3">
+                    Web Serial API is blocked in the preview iframe due to browser security policies.
+                  </p>
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium">To use your BioAmp device:</p>
+                    <ol className="text-sm space-y-1 list-decimal list-inside">
+                      <li>Click the "Open in New Tab" button below</li>
+                      <li>Connect your Arduino device (Baud: 230400)</li>
+                      <li>Click "Connect via USB" and select your port</li>
+                      <li>Click "Start Stream" to see live EEG visualization</li>
+                    </ol>
+                  </div>
                 </div>
-              </div>
-              <Button 
-                className="w-full" 
-                onClick={() => window.open(window.location.href, '_blank')}
-              >
-                🚀 Open in New Tab (Required for Serial Access)
-              </Button>
-            </CardDescription>
-          </CardHeader>
-        </Card>
+                <Button 
+                  className="w-full" 
+                  onClick={() => window.open(window.location.href, '_blank')}
+                >
+                  🚀 Open in New Tab (Required for Serial Access)
+                </Button>
+              </CardDescription>
+            </CardHeader>
+          </Card>
+        )}
 
         {/* Full-width EEG Chart */}
         <Card className="shadow-card mb-6">
