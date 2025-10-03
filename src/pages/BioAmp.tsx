@@ -19,7 +19,7 @@ interface BioAmpProps {
 export default function BioAmp({ onBack }: BioAmpProps) {
   const { status, isSupported, connect, disconnect, startStream, stopStream } = useSerialClient();
   const { toast } = useToast();
-  const [demoMode, setDemoMode] = useState(true); // Enable demo by default
+  const [demoMode, setDemoMode] = useState(false); // Demo disabled by default
   const [channels, setChannels] = useState<number[][]>([[], [], [], [], [], []]);
   const [isPaused, setIsPaused] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
@@ -85,17 +85,18 @@ export default function BioAmp({ onBack }: BioAmpProps) {
 
   const handleConnect = async () => {
     try {
-      setDemoMode(false); // Disable demo when connecting real device
+      console.log('Attempting to connect...');
       await connect();
+      console.log('Connected successfully, status:', status);
       toast({
         title: 'Connected',
-        description: 'BioAmp device connected successfully'
+        description: 'BioAmp device connected successfully. Click "Start Stream" to begin.'
       });
     } catch (error) {
       console.error('Connection error:', error);
       toast({
         title: 'Connection Failed',
-        description: error instanceof Error ? error.message : 'Failed to connect',
+        description: error instanceof Error ? error.message : 'Failed to connect. Make sure to select the correct port.',
         variant: 'destructive'
       });
     }
