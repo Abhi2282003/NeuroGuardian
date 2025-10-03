@@ -9,7 +9,6 @@ import { MeditationTimer } from "@/components/MeditationTimer";
 import { TechniqueDetail } from "@/components/TechniqueDetail";
 import { ProgressiveMuscleRelaxation } from "@/components/ProgressiveMuscleRelaxation";
 import { GuidedImagery } from "@/components/GuidedImagery";
-import { Dashboard } from "@/components/Dashboard";
 
 const techniques = [
   {
@@ -137,7 +136,7 @@ const techniques = [
 
 const Index = () => {
   const [selectedTechnique, setSelectedTechnique] = useState<string | null>(null);
-  const [activeView, setActiveView] = useState<'home' | 'breathing' | 'meditation' | 'detail' | 'pmr' | 'imagery' | 'dashboard'>('home');
+  const [activeView, setActiveView] = useState<'home' | 'breathing' | 'meditation' | 'detail' | 'pmr' | 'imagery'>('home');
 
   const handleTechniqueClick = (technique: any) => {
     if (technique.id === 'breathing') {
@@ -175,10 +174,6 @@ const Index = () => {
     return <GuidedImagery onBack={resetToHome} />;
   }
 
-  if (activeView === 'dashboard') {
-    return <Dashboard onBack={resetToHome} />;
-  }
-
   if (activeView === 'detail' && selectedTechnique) {
     const technique = techniques.find(t => t.id === selectedTechnique);
     return <TechniqueDetail technique={technique} onBack={resetToHome} />;
@@ -204,14 +199,15 @@ const Index = () => {
             Evidence-based relaxation and mental health techniques to help you find peace and reduce stress
           </p>
           <div className="mt-6">
-            <Button 
-              onClick={() => setActiveView('dashboard')} 
-              variant="outline" 
-              className="flex items-center gap-2"
-            >
-              <BarChart3 className="w-4 h-4" />
-              View Progress Dashboard
-            </Button>
+            <Link to="/dashboard">
+              <Button 
+                variant="outline" 
+                className="flex items-center gap-2"
+              >
+                <BarChart3 className="w-4 h-4" />
+                View Progress Dashboard
+              </Button>
+            </Link>
           </div>
         </div>
 
