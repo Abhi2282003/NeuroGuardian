@@ -7,7 +7,7 @@ import { ProgressDashboard } from "./ProgressDashboard";
 import { AIAssistant } from "./AIAssistant";
 import { ConnectionRequests } from "./ConnectionRequests";
 import { SecureChat } from "./SecureChat";
-import { Brain, Activity, MessageCircle, Calendar, Heart, AlertCircle } from "lucide-react";
+import { Brain, Activity, MessageCircle, Calendar, Heart, AlertCircle, GamepadIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -103,7 +103,7 @@ export function StudentDashboard() {
       )}
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <Link to="/screening">
           <Card className="p-4 glass-card hover-scale cursor-pointer">
             <div className="flex items-center gap-3">
@@ -123,6 +123,18 @@ export function StudentDashboard() {
               <div>
                 <p className="text-sm text-muted-foreground">EEG</p>
                 <p className="font-semibold">Brain Monitoring</p>
+              </div>
+            </div>
+          </Card>
+        </Link>
+
+        <Link to="/wellness">
+          <Card className="p-4 glass-card hover-scale cursor-pointer">
+            <div className="flex items-center gap-3">
+              <Heart className="h-8 w-8 text-pink-500" />
+              <div>
+                <p className="text-sm text-muted-foreground">Mindfulness</p>
+                <p className="font-semibold">Activities</p>
               </div>
             </div>
           </Card>
@@ -202,20 +214,20 @@ export function StudentDashboard() {
         </TabsContent>
       </Tabs>
 
-      {/* Wellness Resources */}
+      {/* Fun & Relaxation Games */}
       <Card className="p-6 glass-card">
-        <h3 className="text-lg font-semibold mb-4">Quick Resources</h3>
+        <h3 className="text-lg font-semibold mb-4">Fun & Relaxation</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Link to="/mindfulness">
+          <Link to="/wellness">
             <Button variant="outline" className="w-full justify-start">
               <Heart className="h-4 w-4 mr-2" />
               Mindfulness Activities
             </Button>
           </Link>
-          <Link to="/screening">
+          <Link to="/screening/dino">
             <Button variant="outline" className="w-full justify-start">
-              <Brain className="h-4 w-4 mr-2" />
-              Mental Health Assessments
+              <GamepadIcon className="h-4 w-4 mr-2" />
+              Dino Game
             </Button>
           </Link>
           <Button variant="outline" className="w-full justify-start">

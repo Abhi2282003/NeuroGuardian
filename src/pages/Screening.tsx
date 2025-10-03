@@ -1,9 +1,29 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, Brain, Target, Clock, Eye, GamepadIcon, Pencil, HandMetal, Heart, Activity, Lightbulb, Wine } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function Screening() {
+  const [userRole, setUserRole] = useState<string | null>(null);
+
+  useEffect(() => {
+    loadUserRole();
+  }, []);
+
+  const loadUserRole = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { data } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+
+    setUserRole(data?.role || null);
+  };
   const cognitiveTests = [
     {
       id: 'spiral',
@@ -131,10 +151,11 @@ export default function Screening() {
           </p>
         </div>
 
-        <div className="mb-12">
-          <h2 className="text-2xl font-bold mb-6">Cognitive & Motor Assessments</h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {cognitiveTests.map((test) => {
+        {userRole !== 'patient' && (
+          <div className="mb-12">
+            <h2 className="text-2xl font-bold mb-6">Cognitive & Motor Assessments</h2>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {cognitiveTests.map((test) => {
               const Icon = test.icon;
               return (
                 <Link key={test.id} to={test.path}>
@@ -164,9 +185,10 @@ export default function Screening() {
                   </Card>
                 </Link>
               );
-            })}
+              })}
+            </div>
           </div>
-        </div>
+        )}
 
         <div className="mb-8">
           <h2 className="text-2xl font-bold mb-6">Clinical Screening Questionnaires</h2>
