@@ -1,10 +1,16 @@
 import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Activity, Brain, Zap, Download, Pause, Play } from 'lucide-react';
+import { Slider } from '@/components/ui/slider';
+import { ArrowLeft, Activity, Brain, Zap, Download, Pause, Play, ChevronLeft, ChevronRight, Camera } from 'lucide-react';
 import { useSerialClient } from '@/lib/serial/useSerialClient';
 import { useToast } from '@/hooks/use-toast';
 import EEGChart from '@/components/EEGChart';
+import FilterControls from '@/components/FilterControls';
+import RecordingManager from '@/components/RecordingManager';
+import ChannelSelector from '@/components/ChannelSelector';
+import { SignalFilter, FilterType } from '@/lib/signalFilters';
+import { saveRecording } from '@/lib/indexedDB';
 
 interface BioAmpProps {
   onBack: () => void;
@@ -17,7 +23,17 @@ export default function BioAmp({ onBack }: BioAmpProps) {
   const [channels, setChannels] = useState<number[][]>([[], [], [], [], [], []]);
   const [isPaused, setIsPaused] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
+  const [recordingTimer, setRecordingTimer] = useState<number>(0);
+  const [zoom, setZoom] = useState(1);
+  const [timeBase, setTimeBase] = useState(4);
+  const [selectedChannels, setSelectedChannels] = useState<boolean[]>(Array(6).fill(true));
+  const [channelFilters, setChannelFilters] = useState<FilterType[]>(Array(6).fill('none'));
+  const [frameBuffers, setFrameBuffers] = useState<number[][][]>([]);
+  const [currentFrameIndex, setCurrentFrameIndex] = useState(-1);
+  
   const recordedDataRef = useRef<{ timestamp: number; channels: number[] }[]>([]);
+  const filtersRef = useRef<SignalFilter[]>(Array(6).fill(null).map(() => new SignalFilter(250)));
+  const recordingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Demo mode data generation
   useEffect(() => {
@@ -25,8 +41,11 @@ export default function BioAmp({ onBack }: BioAmpProps) {
       const interval = setInterval(() => {
         setChannels(prev => {
           const newChannels = prev.map((channel, idx) => {
+            if (!selectedChannels[idx]) return channel;
+            
             const newValue = Math.sin(Date.now() / 1000 + idx) * 1000 + 8192 + (Math.random() * 200 - 100);
-            const updated = [...channel.slice(-500), newValue];
+            const filtered = filtersRef.current[idx].process(newValue);
+            const updated = [...channel.slice(-500), filtered];
             
             // Record if recording is active
             if (isRecording && idx === 0) {
@@ -43,7 +62,26 @@ export default function BioAmp({ onBack }: BioAmpProps) {
       }, 4); // ~250 Hz
       return () => clearInterval(interval);
     }
-  }, [demoMode, isPaused, isRecording]);
+  }, [demoMode, isPaused, isRecording, selectedChannels]);
+
+  // Recording timer
+  useEffect(() => {
+    if (isRecording) {
+      recordingIntervalRef.current = setInterval(() => {
+        setRecordingTimer(prev => prev + 1);
+      }, 1000);
+    } else {
+      if (recordingIntervalRef.current) {
+        clearInterval(recordingIntervalRef.current);
+      }
+      setRecordingTimer(0);
+    }
+    return () => {
+      if (recordingIntervalRef.current) {
+        clearInterval(recordingIntervalRef.current);
+      }
+    };
+  }, [isRecording]);
 
   const handleConnect = async () => {
     try {
@@ -69,8 +107,11 @@ export default function BioAmp({ onBack }: BioAmpProps) {
         // Update channels with real data
         setChannels(prev => {
           const newChannels = prev.map((channel, idx) => {
+            if (!selectedChannels[idx]) return channel;
+            
             const newValue = packet.channels[idx] || 8192;
-            return [...channel.slice(-500), newValue];
+            const filtered = filtersRef.current[idx].process(newValue);
+            return [...channel.slice(-500), filtered];
           });
           
           // Record if recording is active
@@ -93,41 +134,7 @@ export default function BioAmp({ onBack }: BioAmpProps) {
     }
   };
 
-  const handleDownloadData = () => {
-    if (recordedDataRef.current.length === 0) {
-      toast({
-        title: 'No Data',
-        description: 'No recorded data to download',
-        variant: 'destructive'
-      });
-      return;
-    }
-
-    // Convert to CSV
-    const headers = ['Timestamp', 'Ch1', 'Ch2', 'Ch3', 'Ch4', 'Ch5', 'Ch6'];
-    const csvContent = [
-      headers.join(','),
-      ...recordedDataRef.current.map(row => 
-        [row.timestamp, ...row.channels].join(',')
-      )
-    ].join('\n');
-
-    // Download
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `eeg-recording-${Date.now()}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-
-    toast({
-      title: 'Downloaded',
-      description: `${recordedDataRef.current.length} samples saved to CSV`
-    });
-  };
-
-  const toggleRecording = () => {
+  const toggleRecording = async () => {
     if (!isRecording) {
       recordedDataRef.current = [];
       setIsRecording(true);
@@ -137,12 +144,82 @@ export default function BioAmp({ onBack }: BioAmpProps) {
       });
     } else {
       setIsRecording(false);
-      toast({
-        title: 'Recording Stopped',
-        description: `${recordedDataRef.current.length} samples recorded`
-      });
+      
+      // Save to IndexedDB
+      if (recordedDataRef.current.length > 0) {
+        const name = `recording-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}`;
+        await saveRecording(
+          recordedDataRef.current,
+          name,
+          selectedChannels.filter(Boolean).length,
+          250
+        );
+        
+        toast({
+          title: 'Recording Saved',
+          description: `${recordedDataRef.current.length} samples saved to IndexedDB`
+        });
+      }
     }
   };
+
+  const captureSnapshot = () => {
+    const snapshot = channels.map(ch => [...ch]);
+    setFrameBuffers(prev => [...prev.slice(-4), snapshot]);
+    setCurrentFrameIndex(-1);
+    toast({
+      title: 'Snapshot Captured',
+      description: 'Frame buffer saved'
+    });
+  };
+
+  const navigateFrame = (direction: 'prev' | 'next') => {
+    if (frameBuffers.length === 0) return;
+    
+    if (currentFrameIndex === -1) {
+      setCurrentFrameIndex(frameBuffers.length - 1);
+    } else {
+      const newIndex = direction === 'prev' 
+        ? Math.max(0, currentFrameIndex - 1)
+        : Math.min(frameBuffers.length - 1, currentFrameIndex + 1);
+      setCurrentFrameIndex(newIndex);
+    }
+  };
+
+  const handleFilterChange = (channelIndex: number, filter: FilterType) => {
+    const newFilters = [...channelFilters];
+    newFilters[channelIndex] = filter;
+    setChannelFilters(newFilters);
+    filtersRef.current[channelIndex].setFilter(filter);
+  };
+
+  const handleApplyFilterToAll = (filter: FilterType) => {
+    const newFilters = Array(6).fill(filter);
+    setChannelFilters(newFilters);
+    filtersRef.current.forEach(f => f.setFilter(filter));
+    toast({
+      title: 'Filter Applied',
+      description: `${filter} filter applied to all channels`
+    });
+  };
+
+  const handleChannelToggle = (index: number) => {
+    const newSelected = [...selectedChannels];
+    newSelected[index] = !newSelected[index];
+    setSelectedChannels(newSelected);
+  };
+
+  const handleSelectAllChannels = () => {
+    setSelectedChannels(Array(6).fill(true));
+  };
+
+  const handleResetChannels = () => {
+    setSelectedChannels(Array(6).fill(true));
+  };
+
+  const displayChannels = currentFrameIndex >= 0 
+    ? frameBuffers[currentFrameIndex]
+    : channels;
 
   return (
     <div className="min-h-screen bg-gradient-background py-8 px-4">
@@ -194,50 +271,120 @@ export default function BioAmp({ onBack }: BioAmpProps) {
         {/* Full-width EEG Chart */}
         <Card className="shadow-card mb-6">
           <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="flex items-center gap-2">
-                  <Activity className="h-5 w-5 text-primary" />
-                  Multi-Channel EEG Visualization
-                </CardTitle>
-                <CardDescription>
-                  Real-time signal monitoring across 6 channels
-                </CardDescription>
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <Activity className="h-5 w-5 text-primary" />
+                    Multi-Channel EEG Visualization
+                  </CardTitle>
+                  <CardDescription>
+                    Real-time signal monitoring with advanced filters
+                  </CardDescription>
+                </div>
+                <div className="flex gap-2 flex-wrap">
+                  <Button
+                    onClick={() => setIsPaused(!isPaused)}
+                    variant="outline"
+                    size="sm"
+                    disabled={!status.streaming && !demoMode}
+                  >
+                    {isPaused ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
+                  </Button>
+                  <Button
+                    onClick={captureSnapshot}
+                    variant="outline"
+                    size="sm"
+                    disabled={!status.streaming && !demoMode}
+                  >
+                    <Camera className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    onClick={() => navigateFrame('prev')}
+                    variant="outline"
+                    size="sm"
+                    disabled={frameBuffers.length === 0}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    onClick={() => navigateFrame('next')}
+                    variant="outline"
+                    size="sm"
+                    disabled={frameBuffers.length === 0}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    onClick={toggleRecording}
+                    variant={isRecording ? "destructive" : "outline"}
+                    size="sm"
+                    disabled={!status.streaming && !demoMode}
+                  >
+                    {isRecording ? `⏺ ${recordingTimer}s` : 'Record'}
+                  </Button>
+                  <RecordingManager />
+                  <FilterControls
+                    channelFilters={channelFilters}
+                    onFilterChange={handleFilterChange}
+                    onApplyToAll={handleApplyFilterToAll}
+                    numChannels={6}
+                  />
+                  <ChannelSelector
+                    totalChannels={6}
+                    selectedChannels={selectedChannels}
+                    onChannelToggle={handleChannelToggle}
+                    onSelectAll={handleSelectAllChannels}
+                    onReset={handleResetChannels}
+                  />
+                </div>
               </div>
-              <div className="flex gap-2">
-                <Button
-                  onClick={() => setIsPaused(!isPaused)}
-                  variant="outline"
-                  size="sm"
-                  disabled={!status.streaming && !demoMode}
-                >
-                  {isPaused ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
-                </Button>
-                <Button
-                  onClick={toggleRecording}
-                  variant={isRecording ? "destructive" : "outline"}
-                  size="sm"
-                  disabled={!status.streaming && !demoMode}
-                >
-                  {isRecording ? '⏺ Recording' : 'Record'}
-                </Button>
-                <Button
-                  onClick={handleDownloadData}
-                  variant="outline"
-                  size="sm"
-                  disabled={recordedDataRef.current.length === 0}
-                >
-                  <Download className="h-4 w-4" />
-                </Button>
+              
+              {/* Zoom and Time Base Controls */}
+              <div className="flex gap-6 items-center">
+                <div className="flex-1">
+                  <label className="text-sm font-medium mb-2 block">
+                    Zoom: {zoom.toFixed(1)}x
+                  </label>
+                  <Slider
+                    value={[zoom]}
+                    onValueChange={(val) => setZoom(val[0])}
+                    min={0.5}
+                    max={3}
+                    step={0.1}
+                    className="w-full"
+                  />
+                </div>
+                <div className="flex-1">
+                  <label className="text-sm font-medium mb-2 block">
+                    Time Base: {timeBase}s
+                  </label>
+                  <Slider
+                    value={[timeBase]}
+                    onValueChange={(val) => setTimeBase(val[0])}
+                    min={1}
+                    max={10}
+                    step={1}
+                    className="w-full"
+                  />
+                </div>
               </div>
+
+              {currentFrameIndex >= 0 && (
+                <div className="text-sm text-muted-foreground">
+                  Viewing snapshot {currentFrameIndex + 1} of {frameBuffers.length}
+                </div>
+              )}
             </div>
           </CardHeader>
           <CardContent>
             <div className="h-96 w-full">
               <EEGChart 
-                data={channels}
-                isStreaming={(status.streaming || demoMode) && !isPaused}
-                channelNames={['Ch1', 'Ch2', 'Ch3', 'Ch4', 'Ch5', 'Ch6']}
+                data={displayChannels.filter((_, idx) => selectedChannels[idx])}
+                isStreaming={(status.streaming || demoMode) && !isPaused && currentFrameIndex === -1}
+                channelNames={selectedChannels
+                  .map((selected, idx) => selected ? `Ch${idx + 1}` : null)
+                  .filter(Boolean) as string[]}
               />
             </div>
           </CardContent>
@@ -305,10 +452,10 @@ export default function BioAmp({ onBack }: BioAmpProps) {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Activity className="h-5 w-5 text-primary" />
-                Recording Info
+                Signal Quality
               </CardTitle>
               <CardDescription>
-                Data capture statistics
+                Real-time monitoring stats
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -316,20 +463,28 @@ export default function BioAmp({ onBack }: BioAmpProps) {
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Status:</span>
                   <span className={isRecording ? 'text-destructive font-medium' : ''}>
-                    {isRecording ? '⏺ Recording' : 'Idle'}
+                    {isRecording ? `⏺ ${recordingTimer}s` : 'Idle'}
                   </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Active Channels:</span>
+                  <span>{selectedChannels.filter(Boolean).length} / 6</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Samples:</span>
                   <span>{recordedDataRef.current.length.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Duration:</span>
-                  <span>{Math.round(recordedDataRef.current.length / 250)}s</span>
+                  <span className="text-muted-foreground">Snapshots:</span>
+                  <span>{frameBuffers.length} / 5</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Paused:</span>
                   <span>{isPaused ? 'Yes' : 'No'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Filters:</span>
+                  <span>{channelFilters.filter(f => f !== 'none').length} active</span>
                 </div>
               </div>
             </CardContent>
