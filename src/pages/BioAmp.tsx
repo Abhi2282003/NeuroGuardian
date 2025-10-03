@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Activity, Brain, Zap } from 'lucide-react';
+import { ArrowLeft, Activity, Brain, Zap, Download, Pause, Play } from 'lucide-react';
 import { useSerialClient } from '@/lib/serial/useSerialClient';
 import { useToast } from '@/hooks/use-toast';
+import EEGChart from '@/components/EEGChart';
 
 interface BioAmpProps {
   onBack: () => void;
@@ -14,22 +15,35 @@ export default function BioAmp({ onBack }: BioAmpProps) {
   const { toast } = useToast();
   const [demoMode, setDemoMode] = useState(false);
   const [channels, setChannels] = useState<number[][]>([[], [], [], [], [], []]);
+  const [isPaused, setIsPaused] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const recordedDataRef = useRef<{ timestamp: number; channels: number[] }[]>([]);
 
   // Demo mode data generation
   useEffect(() => {
-    if (demoMode) {
+    if (demoMode && !isPaused) {
       const interval = setInterval(() => {
         setChannels(prev => {
           const newChannels = prev.map((channel, idx) => {
             const newValue = Math.sin(Date.now() / 1000 + idx) * 1000 + 8192 + (Math.random() * 200 - 100);
-            return [...channel.slice(-500), newValue];
+            const updated = [...channel.slice(-500), newValue];
+            
+            // Record if recording is active
+            if (isRecording && idx === 0) {
+              recordedDataRef.current.push({
+                timestamp: Date.now(),
+                channels: newChannels.map(ch => ch[ch.length - 1] || 0)
+              });
+            }
+            
+            return updated;
           });
           return newChannels;
         });
       }, 4); // ~250 Hz
       return () => clearInterval(interval);
     }
-  }, [demoMode]);
+  }, [demoMode, isPaused, isRecording]);
 
   const handleConnect = async () => {
     try {
@@ -50,14 +64,82 @@ export default function BioAmp({ onBack }: BioAmpProps) {
   const handleStartStream = async () => {
     try {
       await startStream((packet) => {
-        // Handle incoming data
-        console.log('Packet:', packet);
+        if (isPaused) return;
+        
+        // Update channels with real data
+        setChannels(prev => {
+          const newChannels = prev.map((channel, idx) => {
+            const newValue = packet.channels[idx] || 8192;
+            return [...channel.slice(-500), newValue];
+          });
+          
+          // Record if recording is active
+          if (isRecording) {
+            recordedDataRef.current.push({
+              timestamp: packet.timestamp,
+              channels: packet.channels
+            });
+          }
+          
+          return newChannels;
+        });
       });
     } catch (error) {
       toast({
         title: 'Stream Error',
         description: error instanceof Error ? error.message : 'Failed to start stream',
         variant: 'destructive'
+      });
+    }
+  };
+
+  const handleDownloadData = () => {
+    if (recordedDataRef.current.length === 0) {
+      toast({
+        title: 'No Data',
+        description: 'No recorded data to download',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    // Convert to CSV
+    const headers = ['Timestamp', 'Ch1', 'Ch2', 'Ch3', 'Ch4', 'Ch5', 'Ch6'];
+    const csvContent = [
+      headers.join(','),
+      ...recordedDataRef.current.map(row => 
+        [row.timestamp, ...row.channels].join(',')
+      )
+    ].join('\n');
+
+    // Download
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `eeg-recording-${Date.now()}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+
+    toast({
+      title: 'Downloaded',
+      description: `${recordedDataRef.current.length} samples saved to CSV`
+    });
+  };
+
+  const toggleRecording = () => {
+    if (!isRecording) {
+      recordedDataRef.current = [];
+      setIsRecording(true);
+      toast({
+        title: 'Recording Started',
+        description: 'Data is being recorded'
+      });
+    } else {
+      setIsRecording(false);
+      toast({
+        title: 'Recording Stopped',
+        description: `${recordedDataRef.current.length} samples recorded`
       });
     }
   };
@@ -108,6 +190,58 @@ export default function BioAmp({ onBack }: BioAmpProps) {
             </CardContent>
           </Card>
         )}
+
+        {/* Full-width EEG Chart */}
+        <Card className="shadow-card mb-6">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <Activity className="h-5 w-5 text-primary" />
+                  Multi-Channel EEG Visualization
+                </CardTitle>
+                <CardDescription>
+                  Real-time signal monitoring across 6 channels
+                </CardDescription>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => setIsPaused(!isPaused)}
+                  variant="outline"
+                  size="sm"
+                  disabled={!status.streaming && !demoMode}
+                >
+                  {isPaused ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
+                </Button>
+                <Button
+                  onClick={toggleRecording}
+                  variant={isRecording ? "destructive" : "outline"}
+                  size="sm"
+                  disabled={!status.streaming && !demoMode}
+                >
+                  {isRecording ? '⏺ Recording' : 'Record'}
+                </Button>
+                <Button
+                  onClick={handleDownloadData}
+                  variant="outline"
+                  size="sm"
+                  disabled={recordedDataRef.current.length === 0}
+                >
+                  <Download className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="h-96 w-full">
+              <EEGChart 
+                data={channels}
+                isStreaming={(status.streaming || demoMode) && !isPaused}
+                channelNames={['Ch1', 'Ch2', 'Ch3', 'Ch4', 'Ch5', 'Ch6']}
+              />
+            </div>
+          </CardContent>
+        </Card>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           <Card className="shadow-card">
@@ -171,36 +305,32 @@ export default function BioAmp({ onBack }: BioAmpProps) {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Activity className="h-5 w-5 text-primary" />
-                Time Series
+                Recording Info
               </CardTitle>
               <CardDescription>
-                Real-time signal visualization
+                Data capture statistics
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="h-48 bg-muted/20 rounded-lg flex items-center justify-center border border-primary/20 relative overflow-hidden">
-                {demoMode ? (
-                  <div className="absolute inset-0 flex flex-col justify-evenly p-2">
-                    {channels.slice(0, 3).map((_, idx) => (
-                      <div key={idx} className="h-full border-b border-primary/10 last:border-0 relative">
-                        <svg className="w-full h-full">
-                          <polyline
-                            points={channels[idx].slice(-200).map((val, i) => `${i * 2},${30 - (val - 8192) / 100}`).join(' ')}
-                            fill="none"
-                            stroke="hsl(var(--primary))"
-                            strokeWidth="1.5"
-                            className="animate-pulse"
-                          />
-                        </svg>
-                        <span className="absolute top-1 left-2 text-xs text-muted-foreground">Ch{idx + 1}</span>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-muted-foreground">
-                    {status.streaming ? 'Streaming data...' : 'Start stream to view signals'}
-                  </p>
-                )}
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Status:</span>
+                  <span className={isRecording ? 'text-destructive font-medium' : ''}>
+                    {isRecording ? '⏺ Recording' : 'Idle'}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Samples:</span>
+                  <span>{recordedDataRef.current.length.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Duration:</span>
+                  <span>{Math.round(recordedDataRef.current.length / 250)}s</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Paused:</span>
+                  <span>{isPaused ? 'Yes' : 'No'}</span>
+                </div>
               </div>
             </CardContent>
           </Card>
