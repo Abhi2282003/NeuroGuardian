@@ -4,7 +4,6 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Download, Trash2, FolderOpen } from 'lucide-react';
 import { getAllRecordings, deleteRecording, deleteAllRecordings, convertToCSV } from '@/lib/indexedDB';
 import { useToast } from '@/hooks/use-toast';
-import JSZip from 'jszip';
 
 export default function RecordingManager() {
   const [recordings, setRecordings] = useState<any[]>([]);
@@ -54,25 +53,10 @@ export default function RecordingManager() {
       return;
     }
 
-    const zip = new JSZip();
-    
+    // Download all files as separate downloads
     for (const recording of recordings) {
-      const csv = convertToCSV(recording.data, recording.channels);
-      zip.file(`${recording.name}.csv`, csv);
+      await handleDownload(recording);
     }
-
-    const blob = await zip.generateAsync({ type: 'blob' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `eeg-recordings-${Date.now()}.zip`;
-    a.click();
-    URL.revokeObjectURL(url);
-
-    toast({
-      title: 'Downloaded',
-      description: `${recordings.length} recordings downloaded as ZIP`,
-    });
   };
 
   const handleDeleteAll = async () => {
