@@ -7,6 +7,7 @@ import { DailyCheckIn } from "./DailyCheckIn";
 import { ProgressDashboard } from "./ProgressDashboard";
 import { AIAssistant } from "./AIAssistant";
 import { ConnectionRequests } from "./ConnectionRequests";
+import { BrowseCounsellors } from "./BrowseCounsellors";
 import { SecureChat } from "./SecureChat";
 import { Brain, Activity, MessageCircle, Calendar, Heart, AlertCircle, GamepadIcon } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -174,7 +175,7 @@ export function StudentDashboard() {
 
       {/* Main Content Tabs */}
       <Tabs value={defaultTab} onValueChange={setDefaultTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="checkin">
             <Heart className="h-4 w-4 mr-2" />
             Check-In
@@ -186,6 +187,10 @@ export function StudentDashboard() {
           <TabsTrigger value="ai">
             <Brain className="h-4 w-4 mr-2" />
             AI Assistant
+          </TabsTrigger>
+          <TabsTrigger value="browse">
+            <Calendar className="h-4 w-4 mr-2" />
+            Find Counsellor
           </TabsTrigger>
           <TabsTrigger value="requests">
             <Calendar className="h-4 w-4 mr-2" />
@@ -210,6 +215,10 @@ export function StudentDashboard() {
 
         <TabsContent value="ai">
           <AIAssistant />
+        </TabsContent>
+
+        <TabsContent value="browse">
+          <BrowseCounsellors />
         </TabsContent>
 
         <TabsContent value="requests">

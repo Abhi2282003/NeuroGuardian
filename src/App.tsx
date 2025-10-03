@@ -9,6 +9,7 @@ import Home from "./pages/Home";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
+import CounsellorDashboard from "./pages/CounsellorDashboard";
 import BioAmp from "./pages/BioAmp";
 import Screening from "./pages/Screening";
 import { StudentDashboard } from "./components/student/StudentDashboard";
@@ -61,6 +62,14 @@ const App = () => (
             element={
               <ProtectedRoute>
                 <StudentDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/counsellor"
+            element={
+              <ProtectedRoute>
+                <CounsellorDashboard />
               </ProtectedRoute>
             }
           />

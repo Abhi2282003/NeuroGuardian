@@ -248,13 +248,6 @@ export type Database = {
             foreignKeyName: "patients_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
-            referencedRelation: "available_counsellors"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "patients_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -408,13 +401,6 @@ export type Database = {
             foreignKeyName: "sessions_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
-            referencedRelation: "available_counsellors"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "sessions_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -513,16 +499,7 @@ export type Database = {
       }
     }
     Views: {
-      available_counsellors: {
-        Row: {
-          active_connections: number | null
-          id: string | null
-          name: string | null
-          organization: string | null
-          role: Database["public"]["Enums"]["app_role"] | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       has_role: {

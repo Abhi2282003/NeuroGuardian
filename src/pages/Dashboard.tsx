@@ -14,7 +14,25 @@ export default function Dashboard() {
 
   useEffect(() => {
     loadProfile();
+    redirectBasedOnRole();
   }, []);
+
+  const redirectBasedOnRole = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+
+    if (profile?.role === 'patient') {
+      navigate('/student');
+    } else if (profile?.role === 'doctor' || profile?.role === 'volunteer') {
+      navigate('/counsellor');
+    }
+  };
 
   const loadProfile = async () => {
     try {
