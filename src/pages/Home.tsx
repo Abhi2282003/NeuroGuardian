@@ -177,13 +177,14 @@ export default function Home() {
         <div className="grid sm:grid-cols-2 gap-8 mb-12">
           {mainFeatures.map((feature, index) => {
             const Icon = feature.icon;
+            const iconColor = index === 0 ? "text-primary" : index === 1 ? "text-secondary-foreground" : index === 2 ? "text-accent" : "text-primary";
             return (
               <Link key={index} to={feature.path}>
                 <Card className="h-full shadow-card hover:shadow-elegant transition-all duration-500 hover:-translate-y-2 cursor-pointer group border-border/50 bg-card/50 backdrop-blur-sm overflow-hidden relative">
                   <div className={`absolute inset-0 bg-gradient-to-br ${feature.gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-500`} />
                   <CardHeader className="relative">
-                    <div className={`inline-flex p-4 rounded-2xl bg-gradient-to-br ${feature.gradient} mb-6 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500 shadow-lg w-fit`}>
-                      <Icon className="h-8 w-8 text-primary-foreground" />
+                    <div className="inline-flex p-4 rounded-2xl bg-primary/10 mb-6 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500 shadow-lg w-fit">
+                      <Icon className={`h-8 w-8 ${iconColor}`} />
                     </div>
                     <CardTitle className="text-2xl mb-3 group-hover:text-primary transition-colors">{feature.title}</CardTitle>
                     <CardDescription className="text-base leading-relaxed mb-4">{feature.description}</CardDescription>
